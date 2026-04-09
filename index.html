@@ -125,11 +125,20 @@ tr:hover td{background:#fafafa}
     <div class="card-tit">📈 KPI 추이 분석</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="trendProc" onchange="loadTrendKpi()" style="font-size:13px"><option value="">전체</option></select></div>
-      <div class="fg" style="flex:1;margin-bottom:0"><label>KPI</label><select id="trendKpi" onchange="drawTrend()" style="font-size:13px"><option value="">선택</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>KPI</label><select id="trendKpi" style="font-size:13px"><option value="">선택</option></select></div>
     </div>
-    <div class="fg"><label>년도</label><select id="trendYear" onchange="drawTrend()" style="font-size:13px"></select></div>
+    <div class="fg"><label>년도</label><select id="trendYear" style="font-size:13px"></select></div>
+    <button class="btn btn-sm" style="width:100%;margin-bottom:10px;padding:10px;font-size:14px;background:#1565c0;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="drawTrend()">🔍 조회</button>
     <div style="position:relative;width:100%;max-height:300px"><canvas id="trendChart"></canvas></div>
     <div id="trendTable" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <div class="card-tit">📊 팀별 프로세스 실적 종합</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="summProc" onchange="drawSummary()" style="font-size:13px"><option value="">선택</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="summYear" onchange="drawSummary()" style="font-size:13px"></select></div>
+    </div>
+    <div id="summaryTable" style="overflow-x:auto"></div>
   </div>
   <div class="card">
     <div class="card-tit">📥 엑셀 다운로드</div>
@@ -138,6 +147,9 @@ tr:hover td{background:#fafafa}
       <button class="btn btn-sm btn-gray" onclick="exportExcel('record')">실적데이터</button>
       <button class="btn btn-sm btn-gray" onclick="exportExcel('ca')">시정조치</button>
       <button class="btn btn-sm btn-gray" onclick="exportExcel('all')">전체</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-sm" style="width:100%;padding:10px;font-size:13px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="exportPerfSummary()">📊 일괄 실적 다운로드 (프로세스별 월별)</button>
     </div>
   </div>
 </div>
@@ -366,7 +378,10 @@ const KPI_GUIDE={
   '사내공정불량율(SKF 씰)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'SKF 씰 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
   '사내공정불량율(세동산업)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'세동산업 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
   '사내공정불량율(일진)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'일진글로벌 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
-  '수입검사 불량율':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'수입검사 업체별 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서, 부적합 보고서'},
+  '수입검사 불량율(정민스틸)':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'정민스틸 원소재 수입검사 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서'},
+  '수입검사 불량율(태경스틸)':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'태경스틸 원소재 수입검사 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서'},
+  '수입검사 불량율(동일스테인레스)':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'동일스테인레스 원소재 수입검사 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서'},
+  '사내공정불량율(진양오일씰)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'진양오일씰 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
   'Q-cost 비용':{clause:'10.2 부적합 및 시정조치',dept:'품질팀',method:'사내 품질문제 및 고객사 선별비용.\n\n산출식: (계획 / 실적) × 100\n\n근거자료: Q-cost 집계표, 불량비용 분석'},
   '생산계획 대비 실적 달성률':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'생산팀',method:'월 생산계획 대비 실제 생산량 달성률.\n\n산출식: (월생산실적 / 월생산계획) × 100\n\n근거자료: 생산계획서, 생산일보'},
   '설비 가동률':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'설비 가동률 관리.\n\n산출식: (가동시간 / 전체가동시간) × 100\n\n근거자료: 생산팀 작업일보, 설비조치 내역서'},
@@ -812,11 +827,17 @@ function initTrendTab(){
   const yS=document.getElementById('trendYear');
   yS.innerHTML='';
   for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'년';yS.appendChild(o)}
-  // 프로세스 셀렉트
   const pS=document.getElementById('trendProc');
   pS.innerHTML='<option value="">전체</option>';
   processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;pS.appendChild(o)});
   loadTrendKpi();
+  // 팀별 실적 종합 초기화
+  const sP=document.getElementById('summProc');
+  sP.innerHTML='<option value="">선택</option>';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sP.appendChild(o)});
+  const sY=document.getElementById('summYear');
+  sY.innerHTML='';
+  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'년';sY.appendChild(o)}
 }
 
 function loadTrendKpi(){
@@ -880,6 +901,45 @@ function drawTrend(){
   }
   th+='</table>';
   document.getElementById('trendTable').innerHTML=th;
+}
+
+function drawSummary(){
+  const pid=parseInt(document.getElementById('summProc').value);
+  const year=parseInt(document.getElementById('summYear').value);
+  const cont=document.getElementById('summaryTable');
+  if(!pid||isNaN(pid)){cont.innerHTML='<p style="text-align:center;color:#999">프로세스를 선택하세요</p>';return}
+  const procKpis=kpis.filter(k=>k.process_id===pid&&k.is_active);
+  if(!procKpis.length){cont.innerHTML='<p style="text-align:center;color:#999">등록된 KPI가 없습니다</p>';return}
+  const pName=processes.find(p=>p.id===pid)?.name||'';
+  let h='<div style="font-weight:700;font-size:13px;margin-bottom:6px">'+pName+' - '+year+'년 실적 종합</div>';
+  h+='<table style="font-size:11px;white-space:nowrap"><tr><th style="min-width:140px">KPI</th><th>단위</th><th>목표</th>';
+  for(let m=1;m<=12;m++) h+='<th>'+m+'월</th>';
+  h+='<th style="background:#e3f2fd">평균</th><th style="background:#e3f2fd">달성률</th></tr>';
+  procKpis.forEach(k=>{
+    const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
+    let sum=0,cnt=0;
+    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+( k.unit||'')+'</td><td style="color:#c62828">'+(k.target_value??'—')+'</td>';
+    for(let m=1;m<=12;m++){
+      const r=recs.find(x=>x.month===m);
+      const v=r?r.actual_value:null;
+      if(v!==null){sum+=v;cnt++}
+      let bg='';
+      if(v!==null&&k.target_value!=null){
+        const j=judge(v,k.target_value,k.alert_value,k.direction);
+        bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1';
+      }
+      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v:'—')+'</td>';
+    }
+    const avg=cnt?( sum/cnt).toFixed(1):'—';
+    let pct='—';
+    if(cnt&&k.target_value){
+      pct=k.direction==='lower_better'?(k.target_value/(sum/cnt)*100).toFixed(1):((sum/cnt)/k.target_value*100).toFixed(1);
+    }
+    h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
+    h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
+  });
+  h+='</table>';
+  cont.innerHTML=h;
 }
 
 // ===== 설정 탭 =====
@@ -1322,7 +1382,10 @@ async function initDefaultKpis(){
       {name:'사내공정불량율(SKF 씰)',unit:'PPM',dir:'lower_better',target:600,alert:1000,clause:'8.5.1',desc:'SKF 씰 공정 내 불량률',dept:'품질팀'},
       {name:'사내공정불량율(세동산업)',unit:'PPM',dir:'lower_better',target:300,alert:500,clause:'8.5.1',desc:'세동산업 공정 내 불량률',dept:'품질팀'},
       {name:'사내공정불량율(일진)',unit:'PPM',dir:'lower_better',target:1000,alert:1500,clause:'8.5.1',desc:'일진글로벌 공정 내 불량률',dept:'품질팀'},
-      {name:'수입검사 불량율',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'수입검사 업체별 불량률',dept:'품질팀'},
+      {name:'사내공정불량율(진양오일씰)',unit:'PPM',dir:'lower_better',target:500,alert:800,clause:'8.5.1',desc:'진양오일씰 공정 내 불량률',dept:'품질팀'},
+      {name:'수입검사 불량율(정민스틸)',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'정민스틸 원소재 수입검사 불량률',dept:'품질팀'},
+      {name:'수입검사 불량율(태경스틸)',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'태경스틸 원소재 수입검사 불량률',dept:'품질팀'},
+      {name:'수입검사 불량율(동일스테인레스)',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'동일스테인레스 원소재 수입검사 불량률',dept:'품질팀'},
       {name:'Q-cost 비용',unit:'천원',dir:'lower_better',target:4400,alert:5000,clause:'10.2',desc:'사내 품질문제 및 고객사 선별비용',dept:'품질팀'}
     ]},
     {proc:'생산관리',kpis:[
@@ -1405,12 +1468,52 @@ async function initDefaultKpis(){
     }
 
     await loadAll();
+
+    // ★ 2025년 PPT 실적 데이터 일괄 등록
+    showToast('2025년 실적 데이터 등록 중...');
+    const perfData={
+      '사내공정불량율(SKF ATC)':[4557,4527,3060,3687,5113,5973,4673,5866,5901,4911,4472,4564],
+      '사내공정불량율(SKF 씰)':[322,392,267,129,1084,692,1173,759,450,1839,3250,784],
+      '사내공정불량율(세동산업)':[145,87,2517,112,74,10,90,2524,1012,8232,417,1844],
+      '사내공정불량율(일진)':[0,0,2357,1705,4222,8060,4610,1368,1468,1797,1462,1079],
+      '수입검사 불량율(정민스틸)':[0,0,0,0,0,0,0,0,0,0,0,0],
+      '수입검사 불량율(태경스틸)':[0,0,0,0,0,0,0,0,0,0,0,0],
+      '수입검사 불량율(동일스테인레스)':[0,0,0,0,0,0,0,0,0,0,0,0],
+      'Q-cost 비용':[312,322,241,229,394,470,282,1017,561,437,454,397],
+      '생산계획 대비 실적 달성률':[93,84,98,114,70,97,95,106,112,78,93,114],
+      '설비 가동률':[80,78,78,80,80,77,77,80,77,78,61,78],
+      '효율':[100,97,97,100,100,96,96,100,96,97,60,78],
+      '예방보전 준수':[95,97,91,93,97,96,98,95,98,92,93,96],
+      'MTTR 달성률':[84,77,90,86,85,93,96,87,96,86,92,88],
+      '개발수주 달성률':[0,0,1,2,0,0,3,0,0,2,0,0],
+      '개발완료 달성률':[1,0,1,3,1,1,1,1,1,2,1,0],
+      '매출달성율':[914,979,1056,1091,1192,944,1101,1160,1097,1605,1146,1078],
+      '고객사 납기준수율':[83,89,89,83,83,78,83,83,83,100,89,89],
+      '고객사 추가운행건수':[0,1,1,1,2,1,1,2,1,5,2,1],
+      '무재해 사업장 실천':[0,0,0,0,0,0,0,0,0,0,0,0],
+      '협력사 납기율':[56,78,78,83,83,78,83,83,78,78,78,83],
+      '협력사 추가운송 발생건수':[1,1,2,2,2,2,2,2,1,2,2,1]
+    };
+    let recOk=0,recErr=0;
+    for(const [kpiName,monthly] of Object.entries(perfData)){
+      const k=kpis.find(x=>x.kpi_name===kpiName);
+      if(!k)continue;
+      for(let m=0;m<12;m++){
+        if(monthly[m]===null||monthly[m]===undefined)continue;
+        try{
+          await sbUpsert('kpi_record',{kpi_id:k.id,year:2025,month:m+1,actual_value:monthly[m]},'kpi_id,year,month');
+          recOk++;
+        }catch(re){recErr++}
+      }
+    }
+
+    await loadAll();
     renderProcList();renderKpiFilterProc();renderKpiList();
 
     if(errCnt===0){
-      showToast('✅ 기존 데이터 삭제 후 새 KPI 등록 완료 ('+kpis.length+'개)');
+      showToast('✅ KPI '+kpis.length+'개 + 2025년 실적 '+recOk+'건 등록 완료');
     }else{
-      alert('등록 결과: 성공 '+okCnt+'건, 실패 '+errCnt+'건\n\n에러 상세:\n'+errLog.join('\n'));
+      alert('등록 결과: KPI 성공 '+okCnt+'건, 실패 '+errCnt+'건\n실적: 성공 '+recOk+'건, 실패 '+recErr+'건\n\n에러 상세:\n'+errLog.join('\n'));
     }
   }catch(e){alert('일괄등록 실패:\n'+e.message)}
 }
@@ -1465,6 +1568,42 @@ function exportExcel(mode){
 // ===== 유틸 =====
 let tt;
 function showToast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2500)}
+
+function exportPerfSummary(){
+  const wb=XLSX.utils.book_new();
+  const years=[...new Set(records.map(r=>r.year))].sort();
+  if(!years.length){showToast('실적 데이터가 없습니다');return}
+  years.forEach(year=>{
+    const hd=['프로세스','KPI','단위','목표','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월','평균','달성률(%)'];
+    const rows=[];
+    processes.forEach(p=>{
+      const pKpis=kpis.filter(k=>k.process_id===p.id&&k.is_active);
+      pKpis.forEach(k=>{
+        const row=[p.name,k.kpi_name,k.unit||'',k.target_value??''];
+        let sum=0,cnt=0;
+        for(let m=1;m<=12;m++){
+          const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);
+          const v=r?r.actual_value:null;
+          row.push(v!==null?v:'');
+          if(v!==null){sum+=v;cnt++}
+        }
+        const avg=cnt?(sum/cnt):null;
+        row.push(avg!==null?Math.round(avg*10)/10:'');
+        let pct='';
+        if(avg!==null&&k.target_value){
+          pct=k.direction==='lower_better'?Math.round(k.target_value/avg*1000)/10:Math.round(avg/k.target_value*1000)/10;
+        }
+        row.push(pct);
+        rows.push(row);
+      });
+    });
+    const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
+    ws['!cols']=[{wch:12},{wch:28},{wch:8},{wch:8},...Array(14).fill({wch:8}),{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,year+'년');
+  });
+  XLSX.writeFile(wb,'KPI_실적종합_'+new Date().toISOString().split('T')[0].replace(/-/g,'')+'.xlsx');
+  showToast('✅ 다운로드 완료');
+}
 
 // ===== 초기화 =====
 (async function(){
