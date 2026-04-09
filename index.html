@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IATF 16949 KPI 관리</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f0f2f5;color:#212121;padding-bottom:20px}
+.hdr{background:linear-gradient(135deg,#0d47a1,#1565c0);color:#fff;padding:14px 16px;text-align:center}
+.hdr h1{font-size:17px;font-weight:700}.hdr p{font-size:10px;opacity:.7;margin-top:2px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;position:sticky;top:0;z-index:50}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;color:#888;white-space:nowrap}
+.tab.on{color:#0d47a1;border-bottom-color:#0d47a1}
+.pnl{display:none;padding:12px}.pnl.on{display:block}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card-tit{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
+.fg select,.fg input,.fg textarea{width:100%;padding:9px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+.fg select{appearance:auto}
+.fg textarea{resize:vertical;min-height:40px}
+.btn{padding:11px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%}
+.btn:active{transform:scale(.97)}
+.btn-blue{background:linear-gradient(135deg,#0d47a1,#1976d2);color:#fff}
+.btn-green{background:linear-gradient(135deg,#2e7d32,#43a047);color:#fff}
+.btn-red{background:#ffebee;color:#c62828;border:1px solid #ffcdd2}
+.btn-gray{background:#f5f5f5;color:#555;border:1px solid #ddd}
+.btn-sm{padding:7px 12px;font-size:11px;width:auto;border-radius:8px}
+.btn-row{display:flex;gap:8px;margin-bottom:10px}
+.btn-row .btn{flex:1}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.b-ok{background:#e8f5e9;color:#2e7d32}.b-ng{background:#ffebee;color:#c62828}.b-warn{background:#fff8e1;color:#f57f17}.b-na{background:#f5f5f5;color:#999}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#e3f2fd;color:#0d47a1;padding:8px 6px;text-align:left;font-weight:700;border-bottom:2px solid #bbdefb;white-space:nowrap}
+td{padding:7px 6px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+tr:hover td{background:#fafafa}
+.empty{text-align:center;padding:20px;color:#aaa;font-size:13px}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:8px 18px;border-radius:18px;font-size:12px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}.toast.show{opacity:1}
+.chip{display:inline-block;padding:3px 8px;margin:2px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+.chip:hover{opacity:.8}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:92%;max-width:500px;max-height:85vh;overflow-y:auto;padding:16px}
+.modal-tit{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.gauge{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>📊 IATF 16949 KPI 관리</h1>
+  <p>제품설계 제외 · 프로세스별 성과지표 등록 · 실적관리 · 추이분석</p>
+</div>
+<div class="tabs">
+  <div class="tab on" onclick="swTab(0)">📊 현황</div>
+  <div class="tab" onclick="swTab(1)">📝 실적</div>
+  <div class="tab" onclick="swTab(2)">🔧 시정</div>
+  <div class="tab" onclick="swTab(3)">📈 추이</div>
+  <div class="tab" onclick="swTab(4)">⚙ 설정</div>
+</div>
+
+<!-- ===== 현황 대시보드 ===== -->
+<div class="pnl on" id="pnl0">
+  <div class="card">
+    <div class="card-tit" style="justify-content:space-between">
+      <span>📊 KPI 현황 대시보드</span>
+      <div>
+        <select id="dashYear" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"></select>
+        <select id="dashMonth" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"></select>
+      </div>
+    </div>
+    <div id="dashSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"></div>
+    <div id="dashBody"></div>
+  </div>
+</div>
+
+<!-- ===== 실적 입력 ===== -->
+<div class="pnl" id="pnl1">
+  <div class="card">
+    <div class="card-tit">📝 월별 실적 입력</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="recYear" onchange="loadRecKpis()" style="font-size:13px"></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>월</label><select id="recMonth" onchange="loadRecKpis()" style="font-size:13px"></select></div>
+    </div>
+    <div id="recBody"></div>
+    <button class="btn btn-green" onclick="saveAllRecords()" style="margin-top:8px">💾 전체 저장</button>
+  </div>
+</div>
+
+<!-- ===== 시정조치 ===== -->
+<div class="pnl" id="pnl2">
+  <div class="card">
+    <div class="card-tit" style="justify-content:space-between">
+      <span>🔧 KPI 시정조치 관리</span>
+      <button class="btn btn-sm btn-blue" onclick="openCaModal()">+ 시정조치 발행</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <select id="caFilterStatus" onchange="renderCaList()" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:0">
+        <option value="">전체 상태</option>
+        <option value="발행">🔴 발행</option>
+        <option value="조치중">🟡 조치중</option>
+        <option value="효과확인">🔵 효과확인</option>
+        <option value="완료">✅ 완료</option>
+      </select>
+      <select id="caFilterProc" onchange="renderCaList()" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:0">
+        <option value="">전체 프로세스</option>
+      </select>
+    </div>
+    <div id="caListBody"></div>
+  </div>
+  <!-- 시정조치 통계 -->
+  <div class="card">
+    <div class="card-tit">📊 시정조치 현황</div>
+    <div id="caStats"></div>
+  </div>
+</div>
+
+<!-- ===== 추이 분석 ===== -->
+<div class="pnl" id="pnl3">
+  <div class="card">
+    <div class="card-tit">📈 KPI 추이 분석</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="trendProc" onchange="loadTrendKpi()" style="font-size:13px"><option value="">전체</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>KPI</label><select id="trendKpi" style="font-size:13px"><option value="">선택</option></select></div>
+    </div>
+    <div class="fg"><label>년도</label><select id="trendYear" style="font-size:13px"></select></div>
+    <button class="btn btn-sm" style="width:100%;margin-bottom:10px;padding:10px;font-size:14px;background:#1565c0;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="drawTrend()">🔍 조회</button>
+    <div style="position:relative;width:100%;max-height:300px"><canvas id="trendChart"></canvas></div>
+    <div id="trendTable" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <div class="card-tit">📊 팀별 프로세스 실적 종합</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="summProc" onchange="drawSummary()" style="font-size:13px"><option value="">선택</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="summYear" onchange="drawSummary()" style="font-size:13px"></select></div>
+    </div>
+    <div id="summaryTable" style="overflow-x:auto"></div>
+  </div>
+  <div class="card">
+    <div class="card-tit">📥 엑셀 다운로드</div>
+    <div class="btn-row">
+      <button class="btn btn-sm btn-gray" onclick="exportExcel('kpi')">KPI마스터</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel('record')">실적데이터</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel('ca')">시정조치</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel('all')">전체</button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-sm" style="width:100%;padding:10px;font-size:13px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="exportPerfSummary()">📊 일괄 실적 다운로드 (프로세스별 월별)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 설정 ===== -->
+<div class="pnl" id="pnl4">
+  <!-- 이력 관리 -->
+  <div class="card">
+    <div class="card-tit">📊 이력 관리</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div class="fg" style="flex:1;margin-bottom:0"><label>시작일</label><input type="date" id="histStart"></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>종료일</label><input type="date" id="histEnd"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div class="fg" style="flex:1;margin-bottom:0">
+        <label>데이터 종류</label>
+        <select id="histType" style="font-size:13px">
+          <option value="record">📝 KPI 실적</option>
+          <option value="ca">🔧 시정조치</option>
+        </select>
+      </div>
+      <div class="fg" style="flex:1;margin-bottom:0">
+        <label>프로세스</label>
+        <select id="histProc" style="font-size:13px"><option value="">전체</option></select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="histQuery()" style="flex:1">🔍 조회</button>
+      <button class="btn btn-green" onclick="histExcel()" style="flex:1">📥 엑셀</button>
+    </div>
+    <button class="btn btn-red" onclick="histDeleteRange()" style="margin-top:6px">🗑 선택범위 삭제</button>
+    <div id="histResult" style="margin-top:10px"></div>
+    <div id="histTable" class="scroll-x" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-tit">👥 부서 관리</div>
+    <div id="deptList"></div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <input type="text" id="newDeptName" placeholder="새 부서명" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit">
+      <button class="btn btn-sm btn-blue" onclick="addDept()">추가</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tit">🏢 프로세스 관리</div>
+    <div id="procList"></div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <input type="text" id="newProcName" placeholder="새 프로세스명" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit">
+      <button class="btn btn-sm btn-blue" onclick="addProcess()">추가</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-tit" style="justify-content:space-between">
+      <span>📋 KPI 마스터 관리</span>
+      <button class="btn btn-sm btn-blue" onclick="openKpiModal()">+ KPI 등록</button>
+    </div>
+    <div class="fg"><label>프로세스 필터</label><select id="kpiFilterProc" onchange="renderKpiList()" style="font-size:13px"><option value="">전체</option></select></div>
+    <div id="kpiListBody" class="scroll-x"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-tit">🔧 Supabase 설정</div>
+    <div class="fg"><label>URL</label><input type="text" id="cfgUrl" placeholder="https://xxx.supabase.co"></div>
+    <div class="fg"><label>Anon Key</label><input type="password" id="cfgKey" placeholder="eyJ..."></div>
+    <button class="btn btn-blue" onclick="saveCfg()">저장</button>
+    <div style="margin-top:8px">
+      <button class="btn btn-sm btn-gray" onclick="initDefaultKpis()">📋 기본 KPI 일괄등록</button>
+      <p style="font-size:10px;color:#999;margin-top:4px">* Supabase 테이블 생성 후 사용 (SQL 아래 참조)</p>
+    </div>
+    <details style="margin-top:10px">
+      <summary style="font-size:12px;font-weight:600;color:#0d47a1;cursor:pointer">📄 Supabase SQL (테이블 생성)</summary>
+      <pre style="font-size:10px;background:#f5f5f5;padding:10px;border-radius:8px;overflow-x:auto;margin-top:6px;white-space:pre-wrap">
+-- 프로세스 마스터
+CREATE TABLE IF NOT EXISTS kpi_process (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- KPI 마스터
+CREATE TABLE IF NOT EXISTS kpi_master (
+  id SERIAL PRIMARY KEY,
+  process_id INT REFERENCES kpi_process(id),
+  kpi_name TEXT NOT NULL,
+  unit TEXT DEFAULT '%',
+  direction TEXT DEFAULT 'higher_better',
+  target_value NUMERIC,
+  alert_value NUMERIC,
+  iatf_clause TEXT,
+  dept TEXT,
+  description TEXT,
+  frequency TEXT DEFAULT 'monthly',
+  sort_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 기존 테이블에 dept 컬럼 추가 (이미 테이블이 있는 경우)
+ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS dept TEXT;
+
+-- 월별 실적
+CREATE TABLE IF NOT EXISTS kpi_record (
+  id SERIAL PRIMARY KEY,
+  kpi_id INT REFERENCES kpi_master(id),
+  year INT NOT NULL,
+  month INT NOT NULL,
+  actual_value NUMERIC,
+  target_value NUMERIC,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(kpi_id, year, month)
+);
+
+-- RLS
+ALTER TABLE kpi_process ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_master ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_record ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "kpi_process_all" ON kpi_process;
+CREATE POLICY "kpi_process_all" ON kpi_process FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "kpi_master_all" ON kpi_master;
+CREATE POLICY "kpi_master_all" ON kpi_master FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "kpi_record_all" ON kpi_record;
+CREATE POLICY "kpi_record_all" ON kpi_record FOR ALL USING (true) WITH CHECK (true);
+
+-- 시정조치
+CREATE TABLE IF NOT EXISTS kpi_corrective_action (
+  id SERIAL PRIMARY KEY,
+  kpi_id INT REFERENCES kpi_master(id),
+  record_year INT,
+  record_month INT,
+  issue_date DATE DEFAULT CURRENT_DATE,
+  status TEXT DEFAULT '발행',
+  actual_value NUMERIC,
+  target_value NUMERIC,
+  cause TEXT,
+  action_plan TEXT,
+  responsible TEXT,
+  due_date DATE,
+  action_result TEXT,
+  effect_check TEXT,
+  close_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE kpi_corrective_action ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "kpi_ca_all" ON kpi_corrective_action;
+CREATE POLICY "kpi_ca_all" ON kpi_corrective_action FOR ALL USING (true) WITH CHECK (true);
+      </pre>
+    </details>
+  </div>
+
+</div>
+
+<!-- KPI 등록/수정 모달 -->
+<div class="modal-bg" id="kpiModal">
+  <div class="modal">
+    <div class="modal-tit"><span id="kpiModalTit">KPI 등록</span><button onclick="closeKpiModal()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>
+    <input type="hidden" id="kpiEditId">
+    <div class="fg"><label>프로세스 *</label><select id="kpiProc" style="font-size:13px"></select></div>
+    <div class="fg"><label>KPI명 *</label><input type="text" id="kpiName" placeholder="예: 공정불량률"></div>
+    <div class="fg"><label>단위</label><input type="text" id="kpiUnit" placeholder="%, ppm, 건, 점" value="%"></div>
+    <div class="fg"><label>방향</label><select id="kpiDir"><option value="higher_better">높을수록 좋음 (↑)</option><option value="lower_better">낮을수록 좋음 (↓)</option></select></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label>목표값</label><input type="number" id="kpiTarget" step="any" placeholder="예: 99.5"></div>
+      <div class="fg" style="flex:1"><label>경고값</label><input type="number" id="kpiAlert" step="any" placeholder="예: 98"></div>
+    </div>
+    <div class="fg"><label>IATF 조항</label><input type="text" id="kpiClause" placeholder="예: 9.1.2, 8.5.1"></div>
+    <div class="fg"><label>담당부서</label><select id="kpiDept" style="font-size:13px"><option value="">선택</option></select></div>
+    <div class="fg"><label>측정주기</label><select id="kpiFreq"><option value="monthly">월별</option><option value="quarterly">분기별</option><option value="yearly">연간</option></select></div>
+    <div class="fg"><label>설명</label><textarea id="kpiDesc" placeholder="KPI 상세 설명, 산출공식 등"></textarea></div>
+    <div class="fg"><label>정렬순서</label><input type="number" id="kpiSort" value="0"></div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="saveKpi()">💾 저장</button>
+      <button class="btn btn-gray" onclick="closeKpiModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 시정조치 등록/수정 모달 -->
+<div class="modal-bg" id="caModal">
+  <div class="modal">
+    <div class="modal-tit"><span id="caModalTit">시정조치 발행</span><button onclick="closeCaModal()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>
+    <input type="hidden" id="caEditId">
+    <div class="fg"><label>KPI 항목 *</label><select id="caKpi" style="font-size:13px" onchange="onCaKpiSelect()"></select></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label>년도</label><input type="number" id="caYear" style="text-align:center"></div>
+      <div class="fg" style="flex:1"><label>월</label><input type="number" id="caMonth" min="1" max="12" style="text-align:center"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label>실적값</label><input type="number" id="caActual" step="any"></div>
+      <div class="fg" style="flex:1"><label>목표값</label><input type="number" id="caTarget" step="any"></div>
+    </div>
+    <div class="fg"><label>상태</label><select id="caStatus"><option value="발행">🔴 발행</option><option value="조치중">🟡 조치중</option><option value="효과확인">🔵 효과확인</option><option value="완료">✅ 완료</option></select></div>
+    <div class="fg"><label>발생원인 분석 *</label><textarea id="caCause" placeholder="왜 미달되었는가? (5Why, 특성요인도 등)" rows="3"></textarea></div>
+    <div class="fg"><label>시정조치 계획 *</label><textarea id="caAction" placeholder="어떤 조치를 할 것인가?" rows="3"></textarea></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label>담당자</label><select id="caResp" style="font-size:13px"></select></div>
+      <div class="fg" style="flex:1"><label>완료기한</label><input type="date" id="caDue"></div>
+    </div>
+    <div class="fg"><label>조치결과</label><textarea id="caResult" placeholder="실행한 조치 내용 및 결과" rows="2"></textarea></div>
+    <div class="fg"><label>효과확인</label><textarea id="caEffect" placeholder="조치 후 KPI 개선 여부, 데이터 근거" rows="2"></textarea></div>
+    <div class="fg"><label>종결일</label><input type="date" id="caClose"></div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="saveCa()">💾 저장</button>
+      <button class="btn btn-gray" onclick="closeCaModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- KPI 상세정보 팝업 -->
+<div class="modal-bg" id="kpiDetailModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-tit"><span id="detailModalTit">KPI 상세</span><button onclick="closeDetailModal()" style="border:none;background:none;font-size:20px;cursor:pointer">✕</button></div>
+    <div id="detailModalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== IATF 16949 KPI 가이드 데이터 =====
+const KPI_GUIDE={
+  '사내공정불량율(SKF ATC)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'SKF ATC Raceway 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
+  '사내공정불량율(SKF 씰)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'SKF 씰 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
+  '사내공정불량율(세동산업)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'세동산업 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
+  '사내공정불량율(일진)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'일진글로벌 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
+  '수입검사 불량율(정민스틸)':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'정민스틸 원소재 수입검사 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서'},
+  '수입검사 불량율(태경스틸)':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'태경스틸 원소재 수입검사 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서'},
+  '수입검사 불량율(동일스테인레스)':{clause:'8.4.2 관리의 유형과 정도',dept:'품질팀',method:'동일스테인레스 원소재 수입검사 불량 발생률.\n\n산출식: (불량Lot수 / 입고Lot수) × 1,000,000\n\n근거자료: 수입검사 성적서'},
+  '사내공정불량율(진양오일씰)':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'품질팀',method:'진양오일씰 공정 내 불량 발생률.\n\n산출식: (불량수량 / 생산수량) × 1,000,000\n\n근거자료: 일일 생산일보, 불량집계표'},
+  'Q-cost 비용':{clause:'10.2 부적합 및 시정조치',dept:'품질팀',method:'사내 품질문제 및 고객사 선별비용.\n\n산출식: (계획 / 실적) × 100\n\n근거자료: Q-cost 집계표, 불량비용 분석'},
+  '생산계획 대비 실적 달성률':{clause:'8.5.1 생산 및 서비스 제공의 관리',dept:'생산팀',method:'월 생산계획 대비 실제 생산량 달성률.\n\n산출식: (월생산실적 / 월생산계획) × 100\n\n근거자료: 생산계획서, 생산일보'},
+  '설비 가동률':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'설비 가동률 관리.\n\n산출식: (가동시간 / 전체가동시간) × 100\n\n근거자료: 생산팀 작업일보, 설비조치 내역서'},
+  '효율':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'설비 효율 관리.\n\n산출식: 가동률 대비 생산효율\n\n근거자료: 생산팀 작업일보'},
+  '예방보전 준수':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'예방보전 계획 대비 실행률.\n\n산출식: (보전실적건수 / 보전계획건수) × 100\n설비일일점검 + 설비월간점검 + 금형정기점검\n\n근거자료: 예방보전 계획서, 보전 실적대장'},
+  'MTTR 달성률':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'평균수리시간(MTTR) 관리.\n\n산출식: (실평균수리시간 / 목표시간) × 100\n\n근거자료: 설비별 조치현황보고'},
+  '개발수주 달성률':{clause:'8.3 제품 및 서비스의 설계와 개발',dept:'개발팀',method:'개발 수주계획 대비 실적 달성률.\n\n산출식: (수주실적 / 수주계획) × 100\nRFQ접수 및 견적대응 / 개발 착수 건수\n\n근거자료: 수주 실적 관리대장'},
+  '개발완료 달성률':{clause:'8.3 제품 및 서비스의 설계와 개발',dept:'개발팀',method:'개발 완료계획 대비 실적 달성률.\n\n산출식: (개발완료실적 / 개발완료계획) × 100\n견적 및 개발계획 / 개발 완료 현황\n\n근거자료: 개발 프로젝트 관리대장'},
+  '매출달성율':{clause:'9.1 모니터링, 측정, 분석 및 평가',dept:'영업팀',method:'매출 목표 대비 실적 달성률.\n\n산출식: (매출실적 / 매출계획) × 100\n\n근거자료: 영업계획, 영업실적 보고서'},
+  '고객사 납기준수율':{clause:'8.5.4 보전과 보존',dept:'영업팀',method:'고객사 요구 납기 대비 준수율.\n\n산출식: (입고수량 / 발주수량) × 100\n\n근거자료: 입고실적보고서'},
+  '고객사 추가운행건수':{clause:'9.1.2 고객만족',dept:'영업팀',method:'고객사 긴급요청 등으로 발생한 추가 운행 건수.\n\n산출식: 월간 추가운행 발생 건수\n\n근거자료: 운송 기록, 추가운행 발생 대장'},
+  '무재해 사업장 실천':{clause:'6.1 리스크 및 기회를 다루는 조치',dept:'관리팀',method:'산업재해 사고 발생 건수 관리.\n\n산출식: (산재사고발생건수 / 목표건수) × 100\n\n근거자료: 재해발생 보고서, 안전사고 대장'},
+  '협력사 납기율':{clause:'8.4.2.4 공급자 모니터링',dept:'자재팀',method:'협력사 납기 준수율.\n\n산출식: (입고수량 / 발주수량) × 100\n\n근거자료: 협력사 입고실적보고서'},
+  '협력사 추가운송 발생건수':{clause:'8.4.2.4 공급자 모니터링',dept:'자재팀',method:'협력사 귀책으로 발생한 추가 운송 건수.\n\n산출식: 월간 추가운송 발생 건수\n\n근거자료: 운송 기록, 추가운송 발생 대장'}
+};
+
+function openDetailPopup(kpiId){
+  const k=kpis.find(x=>x.id===kpiId);
+  if(!k)return;
+  const guide=KPI_GUIDE[k.kpi_name];
+  const pName=processes.find(p=>p.id===k.process_id)?.name||'';
+
+  document.getElementById('detailModalTit').textContent=k.kpi_name;
+  let html='';
+
+  // 기본 정보
+  html+=`<div style="padding:10px;background:#e3f2fd;border-radius:8px;margin-bottom:10px">
+    <div style="font-size:12px;color:#555">프로세스</div>
+    <div style="font-size:14px;font-weight:700;color:#0d47a1">${pName}</div>
+  </div>`;
+
+  // IATF 조항
+  html+=`<div style="padding:10px;background:#f5f5f5;border-radius:8px;margin-bottom:10px">
+    <div style="font-size:12px;color:#555;margin-bottom:4px">📌 IATF 16949 조항</div>
+    <div style="font-size:14px;font-weight:700;color:#333">${guide?guide.clause:(k.iatf_clause||'—')}</div>
+  </div>`;
+
+  // 담당부서 - DB에 저장된 값 우선, 없으면 가이드 기본값
+  const deptVal=k.dept||(guide?guide.dept:'')||'미지정';
+  html+=`<div style="padding:10px;background:#e8f5e9;border-radius:8px;margin-bottom:10px">
+    <div style="font-size:12px;color:#555;margin-bottom:4px">🏢 담당부서</div>
+    <div style="font-size:13px;font-weight:600;color:#2e7d32">${deptVal}</div>
+  </div>`;
+
+  // 작성방법
+  html+=`<div style="padding:10px;background:#fff8e1;border-radius:8px;margin-bottom:10px">
+    <div style="font-size:12px;color:#555;margin-bottom:4px">📝 산출방법 및 작성 가이드</div>
+    <div style="font-size:12px;color:#333;white-space:pre-line;line-height:1.6">${guide?guide.method:'KPI 설명을 참조하세요.'}</div>
+  </div>`;
+
+  // 현재 설정값
+  const dir=k.direction==='lower_better'?'낮을수록 좋음 (↓)':'높을수록 좋음 (↑)';
+  html+=`<div style="padding:10px;background:#fafafa;border-radius:8px;border:1px solid #eee">
+    <div style="font-size:12px;color:#555;margin-bottom:4px">⚙ 현재 설정</div>
+    <div style="font-size:12px;color:#333">
+      단위: <b>${k.unit||'—'}</b> · 방향: <b>${dir}</b><br>
+      목표: <b>${k.target_value??'—'}</b> · 경고: <b>${k.alert_value??'—'}</b> · 주기: <b>${k.frequency||'monthly'}</b>
+    </div>
+    ${k.description?'<div style="font-size:11px;color:#888;margin-top:4px">'+k.description+'</div>':''}
+  </div>`;
+
+  document.getElementById('detailModalBody').innerHTML=html;
+  document.getElementById('kpiDetailModal').classList.add('show');
+}
+function closeDetailModal(){document.getElementById('kpiDetailModal').classList.remove('show')}
+
+// ===== Supabase REST API helpers =====
+const SB_DEFAULT_URL='';
+const SB_DEFAULT_KEY='';
+const LS_KEY='KPI_CFG';
+function getCfg(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}')}catch{return{}}}
+function getSbUrl(){return getCfg().url||SB_DEFAULT_URL}
+function getSbKey(){return getCfg().key||SB_DEFAULT_KEY}
+
+async function sbSelect(table,query=''){
+  const r=await fetch(getSbUrl()+'/rest/v1/'+table+'?'+query,{headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Accept':'application/json'}});
+  if(!r.ok)throw new Error(await r.text());return r.json();
+}
+async function sbInsert(table,data){
+  const r=await fetch(getSbUrl()+'/rest/v1/'+table,{method:'POST',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error(await r.text());return r.json();
+}
+async function sbUpdate(table,id,data){
+  const r=await fetch(getSbUrl()+'/rest/v1/'+table+'?id=eq.'+id,{method:'PATCH',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error(await r.text());return r.json();
+}
+async function sbDelete(table,id){
+  const r=await fetch(getSbUrl()+'/rest/v1/'+table+'?id=eq.'+id,{method:'DELETE',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey()}});
+  if(!r.ok)throw new Error(await r.text());
+}
+async function sbUpsert(table,data,conflict){
+  const q=conflict?'?on_conflict='+conflict:'';
+  const r=await fetch(getSbUrl()+'/rest/v1/'+table+q,{method:'POST',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation,resolution=merge-duplicates'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error(await r.text());return r.json();
+}
+
+// ===== 데이터 캐시 =====
+let processes=[], kpis=[], records=[], caList=[];
+
+async function loadAll(){
+  try{
+    processes=await sbSelect('kpi_process','order=sort_order,id');
+    kpis=await sbSelect('kpi_master','order=sort_order,id');
+    records=await sbSelect('kpi_record','order=year.desc,month.desc');
+    try{caList=await sbSelect('kpi_corrective_action','order=id.desc')}catch(e){caList=[]}
+    try{await loadDepts()}catch(e){}
+  }catch(e){console.error(e);showToast('데이터 로드 실패: '+e.message)}
+}
+
+// ===== 탭 =====
+function swTab(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('on',i===n)});
+  document.querySelectorAll('.pnl').forEach((p,i)=>{p.classList.toggle('on',i===n)});
+  if(n===0)renderDash();
+  if(n===1)initRecTab();
+  if(n===2)initCaTab();
+  if(n===3)initTrendTab();
+  if(n===4)initSettingTab();
+}
+
+// ===== 현황 대시보드 =====
+function initDashSelects(){
+  const now=new Date();
+  const yS=document.getElementById('dashYear'),mS=document.getElementById('dashMonth');
+  yS.innerHTML='';mS.innerHTML='';
+  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'년';yS.appendChild(o)}
+  for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=m;o.textContent=m+'월';mS.appendChild(o)}
+  mS.value=now.getMonth()+1;
+}
+
+function renderDash(){
+  const y=parseInt(document.getElementById('dashYear').value);
+  const m=parseInt(document.getElementById('dashMonth').value);
+  const activeKpis=kpis.filter(k=>k.is_active);
+  const monthRecs=records.filter(r=>r.year===y&&r.month===m);
+
+  // 요약 카운트
+  let ok=0,ng=0,warn=0,na=0;
+  activeKpis.forEach(k=>{
+    const rec=monthRecs.find(r=>r.kpi_id===k.id);
+    if(!rec||rec.actual_value===null||rec.actual_value===undefined){na++;return}
+    const t=rec.target_value!==null&&rec.target_value!==undefined?rec.target_value:k.target_value;
+    const a=k.alert_value;
+    const v=parseFloat(rec.actual_value);
+    const j=judge(v,t,a,k.direction);
+    if(j==='ok')ok++;else if(j==='ng')ng++;else warn++;
+  });
+  document.getElementById('dashSummary').innerHTML=
+    `<div style="flex:1;text-align:center;padding:8px;background:#e8f5e9;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#2e7d32">${ok}</div><div style="font-size:10px;color:#2e7d32">달성</div></div>`+
+    `<div style="flex:1;text-align:center;padding:8px;background:#fff8e1;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#f57f17">${warn}</div><div style="font-size:10px;color:#f57f17">주의</div></div>`+
+    `<div style="flex:1;text-align:center;padding:8px;background:#ffebee;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#c62828">${ng}</div><div style="font-size:10px;color:#c62828">미달</div></div>`+
+    `<div style="flex:1;text-align:center;padding:8px;background:#f5f5f5;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#999">${na}</div><div style="font-size:10px;color:#999">미입력</div></div>`;
+
+  // 프로세스별 그룹
+  const body=document.getElementById('dashBody');
+  if(!activeKpis.length){body.innerHTML='<div class="empty">등록된 KPI가 없습니다. 설정에서 KPI를 등록하세요.</div>';return}
+  let html='';
+  const grouped={};
+  activeKpis.forEach(k=>{
+    const pName=processes.find(p=>p.id===k.process_id)?.name||'미분류';
+    if(!grouped[pName])grouped[pName]=[];
+    grouped[pName].push(k);
+  });
+  Object.keys(grouped).forEach(pn=>{
+    html+=`<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 ${pn}</div>`;
+    grouped[pn].forEach(k=>{
+      const rec=monthRecs.find(r=>r.kpi_id===k.id);
+      const v=rec?parseFloat(rec.actual_value):null;
+      const t=(rec&&rec.target_value!==null&&rec.target_value!==undefined)?rec.target_value:k.target_value;
+      const j=(v!==null&&!isNaN(v))?judge(v,t,k.alert_value,k.direction):'na';
+      const bc=j==='ok'?'#e8f5e9':j==='ng'?'#ffebee':j==='warn'?'#fff8e1':'#fafafa';
+      const tc=j==='ok'?'#2e7d32':j==='ng'?'#c62828':j==='warn'?'#f57f17':'#999';
+      const icon=j==='ok'?'✅':j==='ng'?'❌':j==='warn'?'⚠️':'—';
+      const pct=(v!==null&&t)?((k.direction==='lower_better'&&t!==0)?(t/v*100).toFixed(1):(v/t*100).toFixed(1)):'—';
+      const hasCa=caList.find(ca=>ca.kpi_id===k.id&&ca.record_year===y&&ca.record_month===m);
+      const caBtn=(j==='ng'&&!hasCa)?`<button onclick="event.stopPropagation();autoIssueCa(${k.id},${y},${m},${v},${t})" style="font-size:9px;padding:2px 6px;border:1px solid #c62828;background:#fff;color:#c62828;border-radius:4px;cursor:pointer;font-weight:700;margin-top:2px">🔧시정</button>`:(hasCa?'<span style="font-size:9px;color:#1565c0">📋발행됨</span>':'');
+      html+=`<div onclick="openDetailPopup(${k.id})" style="display:flex;align-items:center;gap:10px;padding:8px;background:${bc};border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">${icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">${k.kpi_name}</div>
+          <div style="font-size:10px;color:#888">${k.iatf_clause||''} · ${k.unit||''} · 목표:${t??'—'}</div>
+          ${caBtn}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:${tc}">${v!==null&&!isNaN(v)?v:'—'}</div>
+          <div style="font-size:10px;color:#888">${pct}%</div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  body.innerHTML=html;
+}
+
+function judge(val,target,alert,dir){
+  if(val===null||val===undefined||isNaN(val))return'na';
+  if(target===null||target===undefined)return'na';
+  if(dir==='lower_better'){
+    if(val<=target)return'ok';
+    if(alert!==null&&alert!==undefined&&val>=alert)return'ng';
+    return'warn';
+  }else{
+    if(val>=target)return'ok';
+    if(alert!==null&&alert!==undefined&&val<=alert)return'ng';
+    return'warn';
+  }
+}
+
+// ===== 실적 입력 =====
+function initRecTab(){
+  const now=new Date();
+  const yS=document.getElementById('recYear'),mS=document.getElementById('recMonth');
+  yS.innerHTML='';mS.innerHTML='';
+  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'년';yS.appendChild(o)}
+  for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=m;o.textContent=m+'월';mS.appendChild(o)}
+  mS.value=now.getMonth()+1;
+  loadRecKpis();
+}
+
+function loadRecKpis(){
+  const y=parseInt(document.getElementById('recYear').value);
+  const m=parseInt(document.getElementById('recMonth').value);
+  const body=document.getElementById('recBody');
+  const activeKpis=kpis.filter(k=>k.is_active);
+  if(!activeKpis.length){body.innerHTML='<div class="empty">등록된 KPI가 없습니다</div>';return}
+
+  const monthRecs=records.filter(r=>r.year===y&&r.month===m);
+  let html='';
+  const grouped={};
+  activeKpis.forEach(k=>{
+    const pName=processes.find(p=>p.id===k.process_id)?.name||'미분류';
+    if(!grouped[pName])grouped[pName]=[];
+    grouped[pName].push(k);
+  });
+  Object.keys(grouped).forEach(pn=>{
+    html+=`<div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 ${pn}</div>`;
+    grouped[pn].forEach(k=>{
+      const rec=monthRecs.find(r=>r.kpi_id===k.id);
+      const v=rec?rec.actual_value:'';
+      const t=(rec&&rec.target_value!==null)?rec.target_value:k.target_value;
+      const n=rec?rec.note||'':'';
+      html+=`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="${k.id}">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">${k.kpi_name}</div><div style="font-size:10px;color:#888">목표:${t??'—'} ${k.unit||''}</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="${k.id}" value="${v!==null&&v!==undefined&&v!==''?v:''}" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="${k.id}" value="${n}" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div>`;
+    });
+  });
+  body.innerHTML=html;
+}
+
+async function saveAllRecords(){
+  const y=parseInt(document.getElementById('recYear').value);
+  const m=parseInt(document.getElementById('recMonth').value);
+  const vals=document.querySelectorAll('.rec-val');
+  const notes=document.querySelectorAll('.rec-note');
+  const batch=[];
+  vals.forEach((inp,i)=>{
+    const kpiId=parseInt(inp.dataset.kpiid);
+    const v=inp.value.trim();
+    if(v==='')return;
+    const k=kpis.find(x=>x.id===kpiId);
+    const noteEl=notes[i];
+    batch.push({
+      kpi_id:kpiId,
+      year:y,
+      month:m,
+      actual_value:parseFloat(v),
+      target_value:k?k.target_value:null,
+      note:noteEl?noteEl.value.trim():''
+    });
+  });
+  if(!batch.length){showToast('입력된 실적이 없습니다');return}
+  try{
+    // 개별 upsert (conflict on kpi_id+year+month)
+    for(const item of batch){
+      await sbUpsert('kpi_record',item,'kpi_id,year,month');
+    }
+    showToast('✅ '+batch.length+'건 저장 완료');
+    records=await sbSelect('kpi_record','order=year.desc,month.desc');
+    loadRecKpis();
+  }catch(e){showToast('저장 실패: '+e.message)}
+}
+
+// ===== 시정조치 관리 =====
+function initCaTab(){
+  const ps=document.getElementById('caFilterProc');
+  ps.innerHTML='<option value="">전체 프로세스</option>';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;ps.appendChild(o)});
+  renderCaList();renderCaStats();
+}
+
+function renderCaList(){
+  const c=document.getElementById('caListBody');
+  const fs=document.getElementById('caFilterStatus').value;
+  const fp=document.getElementById('caFilterProc').value;
+  let filtered=caList;
+  if(fs)filtered=filtered.filter(ca=>ca.status===fs);
+  if(fp)filtered=filtered.filter(ca=>{const k=kpis.find(x=>x.id===ca.kpi_id);return k&&k.process_id===parseInt(fp)});
+  if(!filtered.length){c.innerHTML='<div style="text-align:center;padding:20px;color:#bbb;font-size:13px">시정조치 이력이 없습니다</div>';return}
+  c.innerHTML='';
+  filtered.forEach(ca=>{
+    const k=kpis.find(x=>x.id===ca.kpi_id);
+    const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+    const kn=k?k.kpi_name:'(삭제된 KPI)';
+    const sc={'발행':'🔴','조치중':'🟡','효과확인':'🔵','완료':'✅'}[ca.status]||'⚪';
+    const bc={'발행':'#ffebee','조치중':'#fff8e1','효과확인':'#e3f2fd','완료':'#e8f5e9'}[ca.status]||'#fafafa';
+    const overdue=ca.due_date&&ca.status!=='완료'&&new Date(ca.due_date)<new Date();
+    const d=document.createElement('div');
+    d.style.cssText='padding:12px;background:'+bc+';border-radius:10px;margin-bottom:8px;cursor:pointer;border-left:4px solid '+(ca.status==='완료'?'#2e7d32':overdue?'#c62828':'#1565c0');
+    d.onclick=()=>editCa(ca.id);
+    d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">${sc} ${kn}</span>
+      <span style="font-size:10px;color:#888">${ca.record_year||''}년 ${ca.record_month||''}월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">${pn} · 실적:${ca.actual_value??'—'} / 목표:${ca.target_value??'—'}</div>
+    <div style="font-size:11px;color:#666">${(ca.cause||'').substring(0,60)}${(ca.cause||'').length>60?'...':''}</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: ${ca.responsible||'—'}</span><span>기한: ${ca.due_date||'—'}</span>
+      ${overdue?'<span style="color:#c62828;font-weight:700">⚠ 기한초과</span>':''}
+    </div>`;
+    c.appendChild(d);
+  });
+}
+
+function renderCaStats(){
+  const c=document.getElementById('caStats');
+  const total=caList.length,issued=caList.filter(ca=>ca.status==='발행').length;
+  const acting=caList.filter(ca=>ca.status==='조치중').length;
+  const checking=caList.filter(ca=>ca.status==='효과확인').length;
+  const done=caList.filter(ca=>ca.status==='완료').length;
+  const overdue=caList.filter(ca=>ca.due_date&&ca.status!=='완료'&&new Date(ca.due_date)<new Date()).length;
+  const closeRate=total?(done/total*100).toFixed(0):0;
+  c.innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;text-align:center">
+    <div style="flex:1;padding:10px;background:#ffebee;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#c62828">${issued}</div><div style="font-size:10px;color:#c62828">발행</div></div>
+    <div style="flex:1;padding:10px;background:#fff8e1;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#f57f17">${acting}</div><div style="font-size:10px;color:#f57f17">조치중</div></div>
+    <div style="flex:1;padding:10px;background:#e3f2fd;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#1565c0">${checking}</div><div style="font-size:10px;color:#1565c0">효과확인</div></div>
+    <div style="flex:1;padding:10px;background:#e8f5e9;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#2e7d32">${done}</div><div style="font-size:10px;color:#2e7d32">완료</div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <div style="flex:1;padding:8px;background:#fafafa;border-radius:8px;text-align:center;border:1px solid #eee"><div style="font-size:11px;color:#888">종결률</div><div style="font-size:18px;font-weight:800;color:#0d47a1">${closeRate}%</div></div>
+    <div style="flex:1;padding:8px;background:${overdue?'#ffebee':'#fafafa'};border-radius:8px;text-align:center;border:1px solid ${overdue?'#ffcdd2':'#eee'}"><div style="font-size:11px;color:#888">기한초과</div><div style="font-size:18px;font-weight:800;color:${overdue?'#c62828':'#2e7d32'}">${overdue}건</div></div>
+  </div>`;
+}
+
+function openCaModal(data){
+  document.getElementById('caModal').classList.add('show');
+  document.getElementById('caModalTit').textContent=data&&data.id?'시정조치 수정':'시정조치 발행';
+  const ks=document.getElementById('caKpi');
+  ks.innerHTML='<option value="">KPI 선택</option>';
+  kpis.filter(k=>k.is_active).forEach(k=>{
+    const pn=processes.find(p=>p.id===k.process_id)?.name||'';
+    ks.innerHTML+='<option value="'+k.id+'">['+pn+'] '+k.kpi_name+'</option>';
+  });
+  populateDeptSelect('caResp','');
+  const now=new Date();
+  if(data){
+    document.getElementById('caEditId').value=data.id||'';
+    ks.value=data.kpi_id||'';
+    document.getElementById('caYear').value=data.record_year||now.getFullYear();
+    document.getElementById('caMonth').value=data.record_month||(now.getMonth()+1);
+    document.getElementById('caActual').value=data.actual_value??'';
+    document.getElementById('caTarget').value=data.target_value??'';
+    document.getElementById('caStatus').value=data.status||'발행';
+    document.getElementById('caCause').value=data.cause||'';
+    document.getElementById('caAction').value=data.action_plan||'';
+    populateDeptSelect('caResp',data.responsible||'');
+    document.getElementById('caDue').value=data.due_date||'';
+    document.getElementById('caResult').value=data.action_result||'';
+    document.getElementById('caEffect').value=data.effect_check||'';
+    document.getElementById('caClose').value=data.close_date||'';
+  }else{
+    document.getElementById('caEditId').value='';
+    document.getElementById('caYear').value=now.getFullYear();
+    document.getElementById('caMonth').value=now.getMonth()+1;
+    document.getElementById('caActual').value='';document.getElementById('caTarget').value='';
+    document.getElementById('caStatus').value='발행';
+    document.getElementById('caCause').value='';document.getElementById('caAction').value='';
+    const due=new Date();due.setDate(due.getDate()+14);
+    document.getElementById('caDue').value=due.toISOString().split('T')[0];
+    document.getElementById('caResult').value='';document.getElementById('caEffect').value='';
+    document.getElementById('caClose').value='';
+  }
+}
+function closeCaModal(){document.getElementById('caModal').classList.remove('show')}
+
+function onCaKpiSelect(){
+  const kpiId=parseInt(document.getElementById('caKpi').value);
+  const k=kpis.find(x=>x.id===kpiId);
+  if(k){
+    document.getElementById('caTarget').value=k.target_value??'';
+    const y=parseInt(document.getElementById('caYear').value),m=parseInt(document.getElementById('caMonth').value);
+    const rec=records.find(r=>r.kpi_id===kpiId&&r.year===y&&r.month===m);
+    if(rec)document.getElementById('caActual').value=rec.actual_value??'';
+  }
+}
+
+async function saveCa(){
+  const id=document.getElementById('caEditId').value;
+  const kpiId=document.getElementById('caKpi').value;
+  const cause=document.getElementById('caCause').value.trim();
+  const action=document.getElementById('caAction').value.trim();
+  if(!kpiId){showToast('KPI를 선택하세요');return}
+  if(!cause){showToast('발생원인을 입력하세요');return}
+  if(!action){showToast('시정조치 계획을 입력하세요');return}
+  const data={
+    kpi_id:parseInt(kpiId),
+    record_year:parseInt(document.getElementById('caYear').value)||null,
+    record_month:parseInt(document.getElementById('caMonth').value)||null,
+    actual_value:document.getElementById('caActual').value?parseFloat(document.getElementById('caActual').value):null,
+    target_value:document.getElementById('caTarget').value?parseFloat(document.getElementById('caTarget').value):null,
+    status:document.getElementById('caStatus').value,
+    cause:cause,action_plan:action,
+    responsible:document.getElementById('caResp').value,
+    due_date:document.getElementById('caDue').value||null,
+    action_result:document.getElementById('caResult').value.trim()||null,
+    effect_check:document.getElementById('caEffect').value.trim()||null,
+    close_date:document.getElementById('caClose').value||null
+  };
+  if(data.status==='완료'&&!data.close_date)data.close_date=new Date().toISOString().split('T')[0];
+  try{
+    if(id)await sbUpdate('kpi_corrective_action',id,data);
+    else await sbInsert('kpi_corrective_action',data);
+    closeCaModal();
+    caList=await sbSelect('kpi_corrective_action','order=id.desc');
+    renderCaList();renderCaStats();showToast('✅ 저장됨');
+  }catch(e){showToast('저장 실패: '+e.message)}
+}
+
+function editCa(id){const ca=caList.find(x=>x.id===id);if(ca)openCaModal(ca)}
+
+// 대시보드 ❌미달 → 시정조치 자동발행 연결
+function autoIssueCa(kpiId,year,month,actual,target){
+  openCaModal({kpi_id:kpiId,record_year:year,record_month:month,actual_value:actual,target_value:target,status:'발행'});
+  swTab(2);
+}
+
+// ===== 추이 분석 =====
+let trendChartInst=null;
+
+function initTrendTab(){
+  const now=new Date();
+  const yS=document.getElementById('trendYear');
+  yS.innerHTML='';
+  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'년';yS.appendChild(o)}
+  const pS=document.getElementById('trendProc');
+  pS.innerHTML='<option value="">전체</option>';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;pS.appendChild(o)});
+  loadTrendKpi();
+  // 팀별 실적 종합 초기화
+  const sP=document.getElementById('summProc');
+  sP.innerHTML='<option value="">선택</option>';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;sP.appendChild(o)});
+  const sY=document.getElementById('summYear');
+  sY.innerHTML='';
+  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'년';sY.appendChild(o)}
+}
+
+function loadTrendKpi(){
+  const pid=document.getElementById('trendProc').value;
+  const kS=document.getElementById('trendKpi');
+  kS.innerHTML='<option value="">KPI 선택</option><option value="ALL">📊 전체 KPI 조회</option>';
+  const filtered=pid?kpis.filter(k=>k.process_id===parseInt(pid)&&k.is_active):kpis.filter(k=>k.is_active);
+  filtered.forEach(k=>{const o=document.createElement('option');o.value=k.id;o.textContent=k.kpi_name;kS.appendChild(o)});
+}
+
+function drawTrend(){
+  const kpiVal=document.getElementById('trendKpi').value;
+  const year=parseInt(document.getElementById('trendYear').value);
+  if(!kpiVal||isNaN(year))return;
+
+  if(kpiVal==='ALL'){drawTrendAll(year);return}
+
+  const kpiId=parseInt(kpiVal);
+  const k=kpis.find(x=>x.id===kpiId);
+  const yearRecs=records.filter(r=>r.kpi_id===kpiId&&r.year===year).sort((a,b)=>a.month-b.month);
+
+  const labels=[],actuals=[],targets=[];
+  for(let m=1;m<=12;m++){
+    labels.push(m+'월');
+    const r=yearRecs.find(x=>x.month===m);
+    actuals.push(r?r.actual_value:null);
+    targets.push(k?k.target_value:null);
+  }
+
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  if(trendChartInst)trendChartInst.destroy();
+  trendChartInst=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'실적',data:actuals,borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,.1)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#1565c0'},
+        {label:'목표',data:targets,borderColor:'#c62828',borderDash:[6,3],pointRadius:0,fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11,family:'Noto Sans KR'}}}},
+      scales:{
+        y:{beginAtZero:false,ticks:{font:{size:10}}},
+        x:{ticks:{font:{size:10}}}
+      }
+    }
+  });
+
+  let th='<table><tr><th>월</th><th>실적</th><th>목표</th><th>달성률</th><th>판정</th></tr>';
+  for(let m=1;m<=12;m++){
+    const r=yearRecs.find(x=>x.month===m);
+    const v=r?r.actual_value:null;
+    const t=k?k.target_value:null;
+    let pct='—',jBadge='<span class="badge b-na">—</span>';
+    if(v!==null&&t){
+      pct=k.direction==='lower_better'?(t!==0?(t/v*100).toFixed(1):'—'):(v/t*100).toFixed(1);
+      const j=judge(v,t,k.alert_value,k.direction);
+      jBadge=j==='ok'?'<span class="badge b-ok">달성</span>':j==='ng'?'<span class="badge b-ng">미달</span>':'<span class="badge b-warn">주의</span>';
+    }
+    th+=`<tr><td>${m}월</td><td style="font-weight:700">${v!==null?v:'—'}</td><td>${t??'—'}</td><td>${pct}%</td><td>${jBadge}</td></tr>`;
+  }
+  th+='</table>';
+  document.getElementById('trendTable').innerHTML=th;
+}
+
+function drawTrendAll(year){
+  const pid=document.getElementById('trendProc').value;
+  const filtered=pid?kpis.filter(k=>k.process_id===parseInt(pid)&&k.is_active):kpis.filter(k=>k.is_active);
+  if(!filtered.length){document.getElementById('trendTable').innerHTML='<p style="text-align:center;color:#999">KPI 없음</p>';return}
+
+  // 차트: 전체 KPI 라인
+  const labels=[];for(let m=1;m<=12;m++)labels.push(m+'월');
+  const colors=['#1565c0','#c62828','#2e7d32','#e65100','#6a1b9a','#00838f','#4e342e','#37474f','#ad1457','#1b5e20','#ff6f00','#283593'];
+  const datasets=filtered.map((k,i)=>{
+    const data=[];
+    for(let m=1;m<=12;m++){const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);data.push(r?r.actual_value:null)}
+    return{label:k.kpi_name,data,borderColor:colors[i%colors.length],tension:.3,pointRadius:3,fill:false};
+  });
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  if(trendChartInst)trendChartInst.destroy();
+  trendChartInst=new Chart(ctx,{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{position:'bottom',labels:{font:{size:9,family:'Noto Sans KR'},boxWidth:12}}},
+      scales:{y:{beginAtZero:false,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}
+    }
+  });
+
+  // 테이블: 전체 KPI 종합
+  let h='<table style="font-size:11px;white-space:nowrap"><tr><th style="min-width:130px">KPI</th><th>단위</th><th>목표</th>';
+  for(let m=1;m<=12;m++)h+='<th>'+m+'월</th>';
+  h+='<th style="background:#e3f2fd">평균</th><th style="background:#e3f2fd">달성률</th></tr>';
+  filtered.forEach(k=>{
+    const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
+    let sum=0,cnt=0;
+    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+(k.unit||'')+'</td><td style="color:#c62828">'+(k.target_value??'—')+'</td>';
+    for(let m=1;m<=12;m++){
+      const r=recs.find(x=>x.month===m);const v=r?r.actual_value:null;
+      if(v!==null){sum+=v;cnt++}
+      let bg='';
+      if(v!==null&&k.target_value!=null){const j=judge(v,k.target_value,k.alert_value,k.direction);bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1'}
+      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v:'—')+'</td>';
+    }
+    const avg=cnt?(sum/cnt).toFixed(1):'—';
+    let pct='—';
+    if(cnt&&k.target_value){pct=k.direction==='lower_better'?(k.target_value/(sum/cnt)*100).toFixed(1):((sum/cnt)/k.target_value*100).toFixed(1)}
+    h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
+    h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
+  });
+  h+='</table>';
+  document.getElementById('trendTable').innerHTML='<div style="overflow-x:auto">'+h+'</div>';
+}
+
+function drawSummary(){
+  const pid=parseInt(document.getElementById('summProc').value);
+  const year=parseInt(document.getElementById('summYear').value);
+  const cont=document.getElementById('summaryTable');
+  if(!pid||isNaN(pid)){cont.innerHTML='<p style="text-align:center;color:#999">프로세스를 선택하세요</p>';return}
+  const procKpis=kpis.filter(k=>k.process_id===pid&&k.is_active);
+  if(!procKpis.length){cont.innerHTML='<p style="text-align:center;color:#999">등록된 KPI가 없습니다</p>';return}
+  const pName=processes.find(p=>p.id===pid)?.name||'';
+  let h='<div style="font-weight:700;font-size:13px;margin-bottom:6px">'+pName+' - '+year+'년 실적 종합</div>';
+  h+='<table style="font-size:11px;white-space:nowrap"><tr><th style="min-width:140px">KPI</th><th>단위</th><th>목표</th>';
+  for(let m=1;m<=12;m++) h+='<th>'+m+'월</th>';
+  h+='<th style="background:#e3f2fd">평균</th><th style="background:#e3f2fd">달성률</th></tr>';
+  procKpis.forEach(k=>{
+    const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
+    let sum=0,cnt=0;
+    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+( k.unit||'')+'</td><td style="color:#c62828">'+(k.target_value??'—')+'</td>';
+    for(let m=1;m<=12;m++){
+      const r=recs.find(x=>x.month===m);
+      const v=r?r.actual_value:null;
+      if(v!==null){sum+=v;cnt++}
+      let bg='';
+      if(v!==null&&k.target_value!=null){
+        const j=judge(v,k.target_value,k.alert_value,k.direction);
+        bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1';
+      }
+      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v:'—')+'</td>';
+    }
+    const avg=cnt?( sum/cnt).toFixed(1):'—';
+    let pct='—';
+    if(cnt&&k.target_value){
+      pct=k.direction==='lower_better'?(k.target_value/(sum/cnt)*100).toFixed(1):((sum/cnt)/k.target_value*100).toFixed(1);
+    }
+    h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
+    h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
+  });
+  h+='</table>';
+  cont.innerHTML=h;
+}
+
+// ===== 설정 탭 =====
+function initSettingTab(){
+  const cfg=getCfg();
+  document.getElementById('cfgUrl').value=cfg.url||SB_DEFAULT_URL;
+  document.getElementById('cfgKey').value=cfg.key||SB_DEFAULT_KEY;
+  renderDeptList();
+  renderProcList();
+  renderKpiFilterProc();
+  renderKpiList();
+  initHistMgr();
+}
+
+// ===== 이력 관리 =====
+let histData=[];
+
+function initHistMgr(){
+  const now=new Date(),m=new Date();m.setMonth(m.getMonth()-1);
+  document.getElementById('histEnd').value=now.toISOString().split('T')[0];
+  document.getElementById('histStart').value=m.toISOString().split('T')[0];
+  const ps=document.getElementById('histProc');
+  ps.innerHTML='<option value="">전체</option>';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;ps.appendChild(o)});
+}
+
+async function histQuery(){
+  const type=document.getElementById('histType').value;
+  const start=document.getElementById('histStart').value;
+  const end=document.getElementById('histEnd').value;
+  const proc=document.getElementById('histProc').value;
+  if(!start||!end){showToast('시작일/종료일을 선택하세요');return}
+
+  const resEl=document.getElementById('histResult');
+  const tblEl=document.getElementById('histTable');
+  resEl.innerHTML='<div style="text-align:center;color:#888;font-size:12px;padding:8px">조회 중...</div>';
+  tblEl.innerHTML='';
+
+  try{
+    if(type==='record'){
+      // KPI 실적 조회: year/month 기반 필터
+      const sy=parseInt(start.split('-')[0]),sm=parseInt(start.split('-')[1]);
+      const ey=parseInt(end.split('-')[0]),em=parseInt(end.split('-')[1]);
+      histData=records.filter(r=>{
+        const rm=r.year*100+r.month;
+        return rm>=sy*100+sm&&rm<=ey*100+em;
+      });
+      if(proc){
+        const procKpiIds=kpis.filter(k=>k.process_id===parseInt(proc)).map(k=>k.id);
+        histData=histData.filter(r=>procKpiIds.includes(r.kpi_id));
+      }
+      resEl.innerHTML='<div style="font-size:12px;font-weight:600;color:#0d47a1;padding:4px">📝 KPI 실적 '+histData.length+'건 조회됨</div>';
+      renderHistRecordTable();
+    }else{
+      // 시정조치 조회: created_at 기반
+      histData=caList.filter(ca=>{
+        const cd=(ca.created_at||'').split('T')[0];
+        return cd>=start&&cd<=end;
+      });
+      if(proc){
+        const procKpiIds=kpis.filter(k=>k.process_id===parseInt(proc)).map(k=>k.id);
+        histData=histData.filter(ca=>procKpiIds.includes(ca.kpi_id));
+      }
+      resEl.innerHTML='<div style="font-size:12px;font-weight:600;color:#0d47a1;padding:4px">🔧 시정조치 '+histData.length+'건 조회됨</div>';
+      renderHistCaTable();
+    }
+  }catch(e){resEl.innerHTML='<div style="color:#c62828;font-size:12px">조회 실패: '+e.message+'</div>'}
+}
+
+function renderHistRecordTable(){
+  const tbl=document.getElementById('histTable');
+  if(!histData.length){tbl.innerHTML='<div style="text-align:center;color:#bbb;font-size:12px;padding:12px">데이터 없음</div>';return}
+  let html='<table><tr><th>년월</th><th>프로세스</th><th>KPI</th><th>실적</th><th>목표</th><th>판정</th><th>비고</th><th></th></tr>';
+  histData.forEach(r=>{
+    const k=kpis.find(x=>x.id===r.kpi_id);
+    const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+    const t=r.target_value!==null?r.target_value:(k?k.target_value:null);
+    const j=(r.actual_value!==null&&t)?judge(r.actual_value,t,k?.alert_value,k?.direction):'na';
+    const jb=j==='ok'?'<span class="badge b-ok">달성</span>':j==='ng'?'<span class="badge b-ng">미달</span>':j==='warn'?'<span class="badge b-warn">주의</span>':'<span class="badge b-na">—</span>';
+    html+=`<tr>
+      <td>${r.year}.${String(r.month).padStart(2,'0')}</td>
+      <td style="font-size:11px">${pn}</td>
+      <td style="font-weight:600;font-size:11px">${k?.kpi_name||'?'}</td>
+      <td style="font-weight:700">${r.actual_value??'—'}</td>
+      <td>${t??'—'}</td>
+      <td>${jb}</td>
+      <td style="font-size:10px;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="histEditRecord(${r.id})" style="padding:3px 6px;font-size:10px">수정</button>
+        <button class="btn btn-sm btn-red" onclick="histDelRecord(${r.id})" style="padding:3px 6px;font-size:10px">삭제</button>
+      </td>
+    </tr>`;
+  });
+  html+='</table>';
+  tbl.innerHTML=html;
+}
+
+function renderHistCaTable(){
+  const tbl=document.getElementById('histTable');
+  if(!histData.length){tbl.innerHTML='<div style="text-align:center;color:#bbb;font-size:12px;padding:12px">데이터 없음</div>';return}
+  let html='<table><tr><th>상태</th><th>KPI</th><th>년월</th><th>실적/목표</th><th>원인</th><th>담당</th><th>기한</th><th></th></tr>';
+  histData.forEach(ca=>{
+    const k=kpis.find(x=>x.id===ca.kpi_id);
+    const sc={'발행':'🔴','조치중':'🟡','효과확인':'🔵','완료':'✅'}[ca.status]||'⚪';
+    html+=`<tr>
+      <td>${sc}${ca.status}</td>
+      <td style="font-weight:600;font-size:11px">${k?.kpi_name||'?'}</td>
+      <td>${ca.record_year||''}.${String(ca.record_month||'').padStart(2,'0')}</td>
+      <td style="font-size:11px">${ca.actual_value??'—'}/${ca.target_value??'—'}</td>
+      <td style="font-size:10px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ca.cause||''}</td>
+      <td style="font-size:11px">${ca.responsible||'—'}</td>
+      <td style="font-size:11px">${ca.due_date||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editCa(${ca.id});swTab(2)" style="padding:3px 6px;font-size:10px">수정</button>
+        <button class="btn btn-sm btn-red" onclick="histDelCa(${ca.id})" style="padding:3px 6px;font-size:10px">삭제</button>
+      </td>
+    </tr>`;
+  });
+  html+='</table>';
+  tbl.innerHTML=html;
+}
+
+// 실적 개별 수정 (인라인 prompt)
+async function histEditRecord(id){
+  const r=records.find(x=>x.id===id);
+  if(!r)return;
+  const k=kpis.find(x=>x.id===r.kpi_id);
+  const newVal=prompt((k?.kpi_name||'KPI')+' '+r.year+'.'+r.month+' 실적값 수정\n현재: '+r.actual_value,r.actual_value??'');
+  if(newVal===null)return;
+  const newNote=prompt('비고 수정',r.note||'');
+  try{
+    await sbUpdate('kpi_record',id,{actual_value:newVal?parseFloat(newVal):null,note:newNote||null});
+    records=await sbSelect('kpi_record','order=year.desc,month.desc');
+    histQuery();showToast('✅ 수정됨');
+  }catch(e){showToast('수정 실패: '+e.message)}
+}
+
+// 실적 개별 삭제
+async function histDelRecord(id){
+  if(!confirm('이 실적 데이터를 삭제하시겠습니까?'))return;
+  try{
+    await sbDelete('kpi_record',id);
+    records=await sbSelect('kpi_record','order=year.desc,month.desc');
+    histQuery();showToast('삭제됨');
+  }catch(e){showToast('삭제 실패: '+e.message)}
+}
+
+// 시정조치 개별 삭제
+async function histDelCa(id){
+  if(!confirm('이 시정조치를 삭제하시겠습니까?'))return;
+  try{
+    await sbDelete('kpi_corrective_action',id);
+    caList=await sbSelect('kpi_corrective_action','order=id.desc');
+    histQuery();showToast('삭제됨');
+  }catch(e){showToast('삭제 실패: '+e.message)}
+}
+
+// 범위 전체 삭제
+async function histDeleteRange(){
+  const type=document.getElementById('histType').value;
+  const typeName=type==='record'?'KPI 실적':'시정조치';
+  if(!histData.length){showToast('먼저 조회하세요');return}
+  if(!confirm('조회된 '+typeName+' '+histData.length+'건을 전부 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.'))return;
+  if(!confirm('정말로 '+histData.length+'건을 삭제합니까? (최종 확인)'))return;
+
+  const table=type==='record'?'kpi_record':'kpi_corrective_action';
+  let ok=0,fail=0;
+  showToast('삭제 중...');
+  for(const item of histData){
+    try{await sbDelete(table,item.id);ok++}catch{fail++}
+  }
+  // 데이터 리로드
+  if(type==='record')records=await sbSelect('kpi_record','order=year.desc,month.desc');
+  else caList=await sbSelect('kpi_corrective_action','order=id.desc');
+  histData=[];
+  document.getElementById('histResult').innerHTML='';
+  document.getElementById('histTable').innerHTML='';
+  showToast('✅ '+ok+'건 삭제'+(fail?' (실패 '+fail+'건)':''));
+}
+
+// 이력 엑셀 다운로드
+function histExcel(){
+  if(!histData.length){showToast('먼저 조회하세요');return}
+  const type=document.getElementById('histType').value;
+  const wb=XLSX.utils.book_new();
+  const today=new Date().toISOString().split('T')[0].replace(/-/g,'');
+
+  if(type==='record'){
+    const hd=['년도','월','프로세스','KPI명','실적','목표','달성률','판정','비고'];
+    const rows=histData.map(r=>{
+      const k=kpis.find(x=>x.id===r.kpi_id);
+      const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+      const t=r.target_value!==null?r.target_value:(k?k.target_value:null);
+      let pct='',j='';
+      if(r.actual_value!==null&&t){
+        pct=k&&k.direction==='lower_better'?(t!==0?(t/r.actual_value*100).toFixed(1):''):(r.actual_value/t*100).toFixed(1);
+        const jv=judge(r.actual_value,t,k?.alert_value,k?.direction);
+        j=jv==='ok'?'달성':jv==='ng'?'미달':'주의';
+      }
+      return[r.year,r.month,pn,k?.kpi_name||'',r.actual_value,t,pct?pct+'%':'',j,r.note||''];
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hd,...rows]),'KPI실적');
+  }else{
+    const hd=['상태','프로세스','KPI명','년도','월','실적','목표','발생원인','시정조치','담당','기한','조치결과','효과확인','종결일'];
+    const rows=histData.map(ca=>{
+      const k=kpis.find(x=>x.id===ca.kpi_id);
+      const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+      return[ca.status,pn,k?.kpi_name||'',ca.record_year,ca.record_month,ca.actual_value,ca.target_value,ca.cause,ca.action_plan,ca.responsible,ca.due_date,ca.action_result,ca.effect_check,ca.close_date];
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hd,...rows]),'시정조치');
+  }
+  XLSX.writeFile(wb,(type==='record'?'KPI실적':'시정조치')+'_'+today+'.xlsx');
+  showToast('📥 엑셀 다운로드 완료');
+}
+
+// ===== 부서 관리 (Supabase common_code: kpi_dept) =====
+const DEFAULT_DEPTS=['품질관리팀','영업관리팀','생산팀','개발팀'];
+let cachedDepts=[];
+
+async function loadDepts(){
+  try{
+    const d=await sbSelect('common_code','code_group=eq.kpi_dept&order=sort_order,id');
+    cachedDepts=d.map(r=>({id:r.id, name:r.code_value}));
+  }catch(e){cachedDepts=[]}
+}
+function getDepts(){
+  return cachedDepts.length?cachedDepts.map(d=>d.name):DEFAULT_DEPTS;
+}
+
+async function renderDeptList(){
+  if(!cachedDepts.length)await loadDepts();
+  const depts=cachedDepts.length?cachedDepts:DEFAULT_DEPTS.map((d,i)=>({id:null,name:d}));
+  const c=document.getElementById('deptList');
+  if(!depts.length){c.innerHTML='<div class="empty">부서 없음</div>';return}
+  c.innerHTML=depts.map((d,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">${d.name}</span>
+    <button class="btn btn-sm btn-red" onclick="delDept(${d.id||0},'${d.name.replace(/'/g,"\\'")}')">삭제</button>
+  </div>`).join('');
+}
+async function addDept(){
+  const name=document.getElementById('newDeptName').value.trim();
+  if(!name){showToast('부서명을 입력하세요');return}
+  if(getDepts().includes(name)){showToast('이미 존재하는 부서');return}
+  try{
+    await sbInsert('common_code',{code_group:'kpi_dept',code_value:name,sort_order:cachedDepts.length});
+    document.getElementById('newDeptName').value='';
+    await loadDepts();renderDeptList();showToast('✅ 추가됨');
+  }catch(e){showToast('추가 실패: '+e.message)}
+}
+async function delDept(id,name){
+  if(!confirm(name+' 부서를 삭제하시겠습니까?'))return;
+  if(id){
+    try{await sbDelete('common_code',id);await loadDepts();renderDeptList();showToast('삭제됨')}
+    catch(e){showToast('삭제 실패: '+e.message)}
+  }else{renderDeptList();showToast('기본값은 서버에 등록 후 삭제 가능합니다')}
+}
+
+function populateDeptSelect(selId,selectedVal){
+  const sel=document.getElementById(selId);
+  if(!sel)return;
+  const depts=getDepts();
+  sel.innerHTML='<option value="">선택</option>';
+  depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o)});
+  if(selectedVal)sel.value=selectedVal;
+}
+
+function saveCfg(){
+  const url=document.getElementById('cfgUrl').value.trim().replace(/\/$/,'');
+  const key=document.getElementById('cfgKey').value.trim();
+  localStorage.setItem(LS_KEY,JSON.stringify({url,key}));
+  showToast('✅ 설정 저장됨');
+  loadAll().then(()=>showToast('데이터 로드 완료'));
+}
+
+// 프로세스 관리
+function renderProcList(){
+  const c=document.getElementById('procList');
+  if(!processes.length){c.innerHTML='<div class="empty">프로세스 없음</div>';return}
+  c.innerHTML=processes.map(p=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">${p.name}</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(${p.id},'${p.name.replace(/'/g,"\\'")}')">삭제</button>
+  </div>`).join('');
+}
+
+async function addProcess(){
+  const name=document.getElementById('newProcName').value.trim();
+  if(!name){showToast('프로세스명을 입력하세요');return}
+  try{
+    await sbInsert('kpi_process',{name,sort_order:processes.length});
+    document.getElementById('newProcName').value='';
+    await loadAll();renderProcList();renderKpiFilterProc();showToast('✅ 추가됨');
+  }catch(e){showToast('추가 실패: '+e.message)}
+}
+
+async function delProcess(id,name){
+  if(!confirm(name+' 프로세스를 삭제하시겠습니까?\n관련 KPI도 삭제됩니다.'))return;
+  try{
+    // 관련 KPI의 실적 먼저 삭제
+    const relKpis=kpis.filter(k=>k.process_id===id);
+    for(const k of relKpis){
+      await fetch(getSbUrl()+'/rest/v1/kpi_record?kpi_id=eq.'+k.id,{method:'DELETE',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey()}});
+    }
+    // 관련 KPI 삭제
+    await fetch(getSbUrl()+'/rest/v1/kpi_master?process_id=eq.'+id,{method:'DELETE',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey()}});
+    await sbDelete('kpi_process',id);
+    await loadAll();renderProcList();renderKpiFilterProc();renderKpiList();showToast('삭제됨');
+  }catch(e){showToast('삭제 실패: '+e.message)}
+}
+
+// KPI 마스터 관리
+function renderKpiFilterProc(){
+  const s=document.getElementById('kpiFilterProc');
+  s.innerHTML='<option value="">전체</option>';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;s.appendChild(o)});
+}
+
+function renderKpiList(){
+  const pid=document.getElementById('kpiFilterProc').value;
+  const filtered=pid?kpis.filter(k=>k.process_id===parseInt(pid)):kpis;
+  const c=document.getElementById('kpiListBody');
+  if(!filtered.length){c.innerHTML='<div class="empty">KPI 없음</div>';return}
+  let html='<table><tr><th>프로세스</th><th>KPI명</th><th>부서</th><th>단위</th><th>방향</th><th>목표</th><th>경고</th><th>조항</th><th>활성</th><th></th></tr>';
+  filtered.forEach(k=>{
+    const pn=processes.find(p=>p.id===k.process_id)?.name||'?';
+    const dir=k.direction==='lower_better'?'↓':'↑';
+    html+=`<tr>
+      <td>${pn}</td><td style="font-weight:600">${k.kpi_name}</td><td style="font-size:11px">${k.dept||'—'}</td><td>${k.unit||''}</td><td>${dir}</td>
+      <td>${k.target_value??'—'}</td><td>${k.alert_value??'—'}</td><td style="font-size:10px">${k.iatf_clause||''}</td>
+      <td>${k.is_active?'<span class="badge b-ok">ON</span>':'<span class="badge b-na">OFF</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(${k.id})">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(${k.id})">삭제</button>
+      </td>
+    </tr>`;
+  });
+  html+='</table>';
+  c.innerHTML=html;
+}
+
+function openKpiModal(data){
+  document.getElementById('kpiModal').classList.add('show');
+  document.getElementById('kpiModalTit').textContent=data?'KPI 수정':'KPI 등록';
+  const ps=document.getElementById('kpiProc');
+  ps.innerHTML='';
+  processes.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;ps.appendChild(o)});
+  if(data){
+    document.getElementById('kpiEditId').value=data.id;
+    ps.value=data.process_id;
+    document.getElementById('kpiName').value=data.kpi_name;
+    document.getElementById('kpiUnit').value=data.unit||'%';
+    document.getElementById('kpiDir').value=data.direction||'higher_better';
+    document.getElementById('kpiTarget').value=data.target_value??'';
+    document.getElementById('kpiAlert').value=data.alert_value??'';
+    document.getElementById('kpiClause').value=data.iatf_clause||'';
+    populateDeptSelect('kpiDept',data.dept||'');
+    document.getElementById('kpiFreq').value=data.frequency||'monthly';
+    document.getElementById('kpiDesc').value=data.description||'';
+    document.getElementById('kpiSort').value=data.sort_order||0;
+  }else{
+    document.getElementById('kpiEditId').value='';
+    document.getElementById('kpiName').value='';
+    document.getElementById('kpiUnit').value='%';
+    document.getElementById('kpiDir').value='higher_better';
+    document.getElementById('kpiTarget').value='';
+    document.getElementById('kpiAlert').value='';
+    document.getElementById('kpiClause').value='';
+    populateDeptSelect('kpiDept','');
+    document.getElementById('kpiFreq').value='monthly';
+    document.getElementById('kpiDesc').value='';
+    document.getElementById('kpiSort').value=0;
+  }
+}
+function closeKpiModal(){document.getElementById('kpiModal').classList.remove('show')}
+
+async function saveKpi(){
+  const id=document.getElementById('kpiEditId').value;
+  const data={
+    process_id:parseInt(document.getElementById('kpiProc').value),
+    kpi_name:document.getElementById('kpiName').value.trim(),
+    unit:document.getElementById('kpiUnit').value.trim(),
+    direction:document.getElementById('kpiDir').value,
+    target_value:document.getElementById('kpiTarget').value?parseFloat(document.getElementById('kpiTarget').value):null,
+    alert_value:document.getElementById('kpiAlert').value?parseFloat(document.getElementById('kpiAlert').value):null,
+    iatf_clause:document.getElementById('kpiClause').value.trim(),
+    dept:document.getElementById('kpiDept').value,
+    frequency:document.getElementById('kpiFreq').value,
+    description:document.getElementById('kpiDesc').value.trim(),
+    sort_order:parseInt(document.getElementById('kpiSort').value)||0
+  };
+  if(!data.kpi_name){showToast('KPI명을 입력하세요');return}
+  if(!data.process_id){showToast('프로세스를 선택하세요');return}
+  try{
+    if(id)await sbUpdate('kpi_master',id,data);
+    else await sbInsert('kpi_master',data);
+    closeKpiModal();await loadAll();renderKpiList();showToast('✅ 저장됨');
+  }catch(e){showToast('저장 실패: '+e.message)}
+}
+
+function editKpi(id){const k=kpis.find(x=>x.id===id);if(k)openKpiModal(k)}
+
+async function delKpi(id){
+  if(!confirm('이 KPI를 삭제하시겠습니까?\n관련 실적도 삭제됩니다.'))return;
+  try{
+    await fetch(getSbUrl()+'/rest/v1/kpi_record?kpi_id=eq.'+id,{method:'DELETE',headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey()}});
+    await sbDelete('kpi_master',id);
+    await loadAll();renderKpiList();showToast('삭제됨');
+  }catch(e){showToast('삭제 실패: '+e.message)}
+}
+
+// ===== 기본 KPI 일괄등록 =====
+async function initDefaultKpis(){
+  if(!getSbUrl()||!getSbKey()){alert('Supabase URL과 Key를 먼저 입력하고 저장하세요.');return}
+  if(!confirm('⚠️ 기존 KPI 데이터를 모두 삭제하고\n새로운 KPI를 일괄 등록합니다.\n\n(시정조치, 실적, KPI마스터, 프로세스 모두 초기화)\n\n진행하시겠습니까?'))return;
+
+  // 테이블 존재 여부 체크
+  try{
+    const testR=await fetch(getSbUrl()+'/rest/v1/kpi_process?limit=0',{headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey()}});
+    if(!testR.ok){
+      const errTxt=await testR.text();
+      alert('kpi_process 테이블 접근 실패!\n\nSupabase SQL Editor에서 테이블 생성 SQL을 먼저 실행하세요.\n\n에러: '+errTxt);
+      return;
+    }
+  }catch(e){alert('Supabase 연결 실패: '+e.message);return}
+
+  // ★ 기존 데이터 전체 삭제 (FK 순서: 시정조치→실적→KPI마스터→프로세스)
+  showToast('기존 데이터 삭제 중...');
+  const hdr={'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json'};
+  const delTables=['kpi_corrective_action','kpi_record','kpi_master','kpi_process'];
+  for(const tbl of delTables){
+    try{
+      const r=await fetch(getSbUrl()+'/rest/v1/'+tbl+'?id=gt.0',{method:'DELETE',headers:hdr});
+      if(!r.ok){const t=await r.text();console.warn(tbl+' 삭제 실패:'+t)}
+    }catch(e){console.warn(tbl+' 삭제 에러:'+e.message)}
+  }
+  processes=[];kpis=[];records=[];correctiveActions=[];
+
+  const defaultData=[
+    {proc:'품질관리',kpis:[
+      {name:'사내공정불량율(SKF ATC)',unit:'PPM',dir:'lower_better',target:2000,alert:3000,clause:'8.5.1',desc:'SKF ATC Raceway 공정 내 불량률',dept:'품질팀'},
+      {name:'사내공정불량율(SKF 씰)',unit:'PPM',dir:'lower_better',target:600,alert:1000,clause:'8.5.1',desc:'SKF 씰 공정 내 불량률',dept:'품질팀'},
+      {name:'사내공정불량율(세동산업)',unit:'PPM',dir:'lower_better',target:300,alert:500,clause:'8.5.1',desc:'세동산업 공정 내 불량률',dept:'품질팀'},
+      {name:'사내공정불량율(일진)',unit:'PPM',dir:'lower_better',target:1000,alert:1500,clause:'8.5.1',desc:'일진글로벌 공정 내 불량률',dept:'품질팀'},
+      {name:'사내공정불량율(진양오일씰)',unit:'PPM',dir:'lower_better',target:500,alert:800,clause:'8.5.1',desc:'진양오일씰 공정 내 불량률',dept:'품질팀'},
+      {name:'수입검사 불량율(정민스틸)',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'정민스틸 원소재 수입검사 불량률',dept:'품질팀'},
+      {name:'수입검사 불량율(태경스틸)',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'태경스틸 원소재 수입검사 불량률',dept:'품질팀'},
+      {name:'수입검사 불량율(동일스테인레스)',unit:'PPM',dir:'lower_better',target:0,alert:100,clause:'8.4.2',desc:'동일스테인레스 원소재 수입검사 불량률',dept:'품질팀'},
+      {name:'Q-cost 비용',unit:'천원',dir:'lower_better',target:4400,alert:5000,clause:'10.2',desc:'사내 품질문제 및 고객사 선별비용',dept:'품질팀'}
+    ]},
+    {proc:'생산관리',kpis:[
+      {name:'생산계획 대비 실적 달성률',unit:'%',dir:'higher_better',target:100,alert:90,clause:'8.5.1',desc:'월 생산계획 대비 실적 달성률',dept:'생산팀'},
+      {name:'설비 가동률',unit:'%',dir:'higher_better',target:80,alert:70,clause:'8.5.1.5',desc:'설비 가동률',dept:'생산팀'},
+      {name:'효율',unit:'%',dir:'higher_better',target:80,alert:70,clause:'8.5.1.5',desc:'설비 효율',dept:'생산팀'},
+      {name:'예방보전 준수',unit:'%',dir:'higher_better',target:100,alert:90,clause:'8.5.1.5',desc:'예방보전 계획대비 실적 준수율',dept:'생산팀'},
+      {name:'MTTR 달성률',unit:'%',dir:'higher_better',target:100,alert:85,clause:'8.5.1.5',desc:'평균수리시간 달성률',dept:'생산팀'}
+    ]},
+    {proc:'개발관리',kpis:[
+      {name:'개발수주 달성률',unit:'건',dir:'higher_better',target:8,alert:6,clause:'8.3',desc:'개발 수주계획 대비 실적 달성률',dept:'개발팀'},
+      {name:'개발완료 달성률',unit:'건',dir:'higher_better',target:12,alert:10,clause:'8.3',desc:'개발 완료계획 대비 실적 달성률',dept:'개발팀'}
+    ]},
+    {proc:'영업관리',kpis:[
+      {name:'매출달성율',unit:'백만원',dir:'higher_better',target:15685,alert:14000,clause:'9.1',desc:'매출 목표 대비 실적 달성률',dept:'영업팀'},
+      {name:'고객사 납기준수율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'8.5.4',desc:'고객사 요구 납기 대비 준수율',dept:'영업팀'},
+      {name:'고객사 추가운행건수',unit:'건',dir:'lower_better',target:60,alert:70,clause:'9.1.2',desc:'고객사 추가운행 발생 건수',dept:'영업팀'},
+      {name:'무재해 사업장 실천',unit:'건',dir:'lower_better',target:0,alert:1,clause:'6.1',desc:'산업재해 사고 발생 건수',dept:'관리팀'}
+    ]},
+    {proc:'구매자재',kpis:[
+      {name:'협력사 납기율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'8.4.2.4',desc:'협력사 납기 준수율',dept:'자재팀'},
+      {name:'협력사 추가운송 발생건수',unit:'건',dir:'lower_better',target:60,alert:70,clause:'8.4.2.4',desc:'협력사 추가 운송 발생 건수',dept:'자재팀'}
+    ]}
+  ];
+
+  let okCnt=0,errCnt=0,errLog=[];
+  showToast('새 KPI 등록 중...');
+
+  try{
+    for(const group of defaultData){
+      // Step 1: 프로세스 등록
+      let proc=processes.find(p=>p.name===group.proc);
+      if(!proc){
+        try{
+          const r=await fetch(getSbUrl()+'/rest/v1/kpi_process',{
+            method:'POST',
+            headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation,resolution=merge-duplicates'},
+            body:JSON.stringify({name:group.proc,sort_order:processes.length})
+          });
+          const txt=await r.text();
+          if(!r.ok){errLog.push('[프로세스:'+group.proc+'] '+txt);errCnt++;continue}
+          const arr=JSON.parse(txt);
+          proc=Array.isArray(arr)?arr[0]:arr;
+          if(!proc||!proc.id){errLog.push('[프로세스:'+group.proc+'] 응답에 id 없음: '+txt);errCnt++;continue}
+          processes.push(proc);
+        }catch(pe){errLog.push('[프로세스:'+group.proc+'] '+pe.message);errCnt++;continue}
+      }
+
+      // Step 2: KPI 등록
+      for(const kd of group.kpis){
+        try{
+          const payload={
+            process_id:proc.id,kpi_name:kd.name,unit:kd.unit,direction:kd.dir,dept:kd.dept||'',
+            target_value:kd.target,alert_value:kd.alert,iatf_clause:kd.clause,
+            description:kd.desc,frequency:'monthly',sort_order:0
+          };
+          let r=await fetch(getSbUrl()+'/rest/v1/kpi_master',{
+            method:'POST',
+            headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation'},
+            body:JSON.stringify(payload)
+          });
+          // dept 컬럼이 없으면 dept 빼고 재시도
+          if(!r.ok){
+            const txt=await r.text();
+            if(txt.includes('dept')){
+              delete payload.dept;
+              r=await fetch(getSbUrl()+'/rest/v1/kpi_master',{
+                method:'POST',
+                headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation'},
+                body:JSON.stringify(payload)
+              });
+              if(!r.ok){const t2=await r.text();errLog.push('[KPI:'+kd.name+'] '+t2);errCnt++;continue}
+            }else{errLog.push('[KPI:'+kd.name+'] '+txt);errCnt++;continue}
+          }
+          const arr=await r.json();
+          if(Array.isArray(arr))kpis.push(...arr);
+          okCnt++;
+        }catch(ke){errLog.push('[KPI:'+kd.name+'] '+ke.message);errCnt++}
+      }
+    }
+
+    await loadAll();
+
+    // ★ 2025년 PPT 실적 데이터 일괄 등록
+    showToast('2025년 실적 데이터 등록 중...');
+    const perfData={
+      '사내공정불량율(SKF ATC)':[4557,4527,3060,3687,5113,5973,4673,5866,5901,4911,4472,4564],
+      '사내공정불량율(SKF 씰)':[322,392,267,129,1084,692,1173,759,450,1839,3250,784],
+      '사내공정불량율(세동산업)':[145,87,2517,112,74,10,90,2524,1012,8232,417,1844],
+      '사내공정불량율(일진)':[0,0,2357,1705,4222,8060,4610,1368,1468,1797,1462,1079],
+      '수입검사 불량율(정민스틸)':[0,0,0,0,0,0,0,0,0,0,0,0],
+      '수입검사 불량율(태경스틸)':[0,0,0,0,0,0,0,0,0,0,0,0],
+      '수입검사 불량율(동일스테인레스)':[0,0,0,0,0,0,0,0,0,0,0,0],
+      'Q-cost 비용':[312,322,241,229,394,470,282,1017,561,437,454,397],
+      '생산계획 대비 실적 달성률':[93,84,98,114,70,97,95,106,112,78,93,114],
+      '설비 가동률':[80,78,78,80,80,77,77,80,77,78,61,78],
+      '효율':[100,97,97,100,100,96,96,100,96,97,60,78],
+      '예방보전 준수':[95,97,91,93,97,96,98,95,98,92,93,96],
+      'MTTR 달성률':[84,77,90,86,85,93,96,87,96,86,92,88],
+      '개발수주 달성률':[0,0,1,2,0,0,3,0,0,2,0,0],
+      '개발완료 달성률':[1,0,1,3,1,1,1,1,1,2,1,0],
+      '매출달성율':[914,979,1056,1091,1192,944,1101,1160,1097,1605,1146,1078],
+      '고객사 납기준수율':[83,89,89,83,83,78,83,83,83,100,89,89],
+      '고객사 추가운행건수':[0,1,1,1,2,1,1,2,1,5,2,1],
+      '무재해 사업장 실천':[0,0,0,0,0,0,0,0,0,0,0,0],
+      '협력사 납기율':[56,78,78,83,83,78,83,83,78,78,78,83],
+      '협력사 추가운송 발생건수':[1,1,2,2,2,2,2,2,1,2,2,1]
+    };
+    let recOk=0,recErr=0,recErrLog=[];
+    const recBatch=[];
+    for(const [kpiName,monthly] of Object.entries(perfData)){
+      const k=kpis.find(x=>x.kpi_name===kpiName);
+      if(!k){recErrLog.push('KPI 못찾음: '+kpiName);recErr++;continue}
+      for(let m=0;m<12;m++){
+        if(monthly[m]===null||monthly[m]===undefined)continue;
+        recBatch.push({kpi_id:k.id,year:2025,month:m+1,actual_value:monthly[m]});
+      }
+    }
+    // 일괄 INSERT
+    if(recBatch.length){
+      try{
+        const r=await fetch(getSbUrl()+'/rest/v1/kpi_record',{
+          method:'POST',
+          headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation'},
+          body:JSON.stringify(recBatch)
+        });
+        if(r.ok){recOk=recBatch.length}else{const t=await r.text();recErr=recBatch.length;recErrLog.push(t)}
+      }catch(e){recErr=recBatch.length;recErrLog.push(e.message)}
+    }
+
+    await loadAll();
+    renderProcList();renderKpiFilterProc();renderKpiList();
+
+    let msg='KPI '+kpis.length+'개 등록, 실적 '+recOk+'건 등록';
+    if(errCnt>0) msg+='\nKPI 실패: '+errCnt+'건';
+    if(recErr>0) msg+='\n실적 실패: '+recErr+'건\n'+recErrLog.slice(0,5).join('\n');
+    alert(msg);
+  }catch(e){alert('일괄등록 실패:\n'+e.message)}
+}
+
+// ===== 엑셀 다운로드 =====
+function exportExcel(mode){
+  const wb=XLSX.utils.book_new();
+  const today=new Date().toISOString().split('T')[0].replace(/-/g,'');
+
+  if(mode==='kpi'||mode==='all'){
+    const hd=['ID','프로세스','KPI명','담당부서','단위','방향','목표값','경고값','IATF조항','주기','설명','활성'];
+    const rows=kpis.map(k=>{
+      const pn=processes.find(p=>p.id===k.process_id)?.name||'';
+      return[k.id,pn,k.kpi_name,k.dept||'',k.unit,k.direction==='lower_better'?'낮을수록':'높을수록',k.target_value,k.alert_value,k.iatf_clause,k.frequency,k.description,k.is_active?'Y':'N'];
+    });
+    const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
+    XLSX.utils.book_append_sheet(wb,ws,'KPI마스터');
+  }
+  if(mode==='record'||mode==='all'){
+    const hd=['년도','월','프로세스','KPI명','실적','목표','달성률','판정','비고'];
+    const rows=records.map(r=>{
+      const k=kpis.find(x=>x.id===r.kpi_id);
+      const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+      const t=r.target_value!==null?r.target_value:(k?k.target_value:null);
+      let pct='',j='';
+      if(r.actual_value!==null&&t){
+        pct=k&&k.direction==='lower_better'?(t!==0?(t/r.actual_value*100).toFixed(1):''):(r.actual_value/t*100).toFixed(1);
+        const jv=judge(r.actual_value,t,k?.alert_value,k?.direction);
+        j=jv==='ok'?'달성':jv==='ng'?'미달':'주의';
+      }
+      return[r.year,r.month,pn,k?.kpi_name||'',r.actual_value,t,pct?pct+'%':'',j,r.note||''];
+    });
+    const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
+    XLSX.utils.book_append_sheet(wb,ws,'실적데이터');
+  }
+  if(mode==='ca'||mode==='all'){
+    if(caList.length){
+      const hd=['ID','프로세스','KPI명','년도','월','실적','목표','상태','발생원인','시정조치계획','담당','기한','조치결과','효과확인','종결일'];
+      const rows=caList.map(ca=>{
+        const k=kpis.find(x=>x.id===ca.kpi_id);
+        const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+        return[ca.id,pn,k?.kpi_name||'',ca.record_year,ca.record_month,ca.actual_value,ca.target_value,ca.status,ca.cause,ca.action_plan,ca.responsible,ca.due_date,ca.action_result,ca.effect_check,ca.close_date];
+      });
+      const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
+      XLSX.utils.book_append_sheet(wb,ws,'시정조치');
+    }
+  }
+  if(!wb.SheetNames.length){showToast('데이터 없음');return}
+  XLSX.writeFile(wb,'KPI_'+mode+'_'+today+'.xlsx');
+}
+
+// ===== 유틸 =====
+let tt;
+function showToast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2500)}
+
+function exportPerfSummary(){
+  const wb=XLSX.utils.book_new();
+  const years=[...new Set(records.map(r=>r.year))].sort();
+  if(!years.length){showToast('실적 데이터가 없습니다');return}
+  years.forEach(year=>{
+    const hd=['프로세스','KPI','단위','목표','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월','평균','달성률(%)'];
+    const rows=[];
+    processes.forEach(p=>{
+      const pKpis=kpis.filter(k=>k.process_id===p.id&&k.is_active);
+      pKpis.forEach(k=>{
+        const row=[p.name,k.kpi_name,k.unit||'',k.target_value??''];
+        let sum=0,cnt=0;
+        for(let m=1;m<=12;m++){
+          const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);
+          const v=r?r.actual_value:null;
+          row.push(v!==null?v:'');
+          if(v!==null){sum+=v;cnt++}
+        }
+        const avg=cnt?(sum/cnt):null;
+        row.push(avg!==null?Math.round(avg*10)/10:'');
+        let pct='';
+        if(avg!==null&&k.target_value){
+          pct=k.direction==='lower_better'?Math.round(k.target_value/avg*1000)/10:Math.round(avg/k.target_value*1000)/10;
+        }
+        row.push(pct);
+        rows.push(row);
+      });
+    });
+    const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
+    ws['!cols']=[{wch:12},{wch:28},{wch:8},{wch:8},...Array(14).fill({wch:8}),{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,year+'년');
+  });
+  XLSX.writeFile(wb,'KPI_실적종합_'+new Date().toISOString().split('T')[0].replace(/-/g,'')+'.xlsx');
+  showToast('✅ 다운로드 완료');
+}
+
+// ===== 초기화 =====
+(async function(){
+  initDashSelects();
+  if(getSbUrl()&&getSbKey()){
+    await loadAll();
+    renderDash();
+  }else{
+    document.getElementById('dashBody').innerHTML='<div class="empty">⚙ 설정 탭에서 Supabase 연결 정보를 입력하세요</div>';
+  }
+})();
+</script>
+</body>
+</html>
