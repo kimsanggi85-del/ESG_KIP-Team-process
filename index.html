@@ -819,6 +819,100 @@ function autoIssueCa(kpiId,year,month,actual,target){
   swTab(2);
 }
 
+// 추이 탭 → 시정조치 자동발행 (개별)
+function trendAutoIssueCa(kpiId,year,month,actual,target){
+  if(!confirm(`${year}년 ${month}월 미달건 시정조치를 발행하시겠습니까?\n\n실적: ${actual} / 목표: ${target}`))return;
+  const k=kpis.find(x=>x.id===kpiId);
+  const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
+  const due=new Date();due.setDate(due.getDate()+14);
+  const data={
+    kpi_id:kpiId,record_year:year,record_month:month,
+    actual_value:actual,target_value:target,status:'발행',
+    cause:'[자동발행] '+year+'년 '+month+'월 KPI 미달 - 원인분석 필요',
+    action_plan:'[자동발행] 시정조치 계획 수립 필요',
+    responsible:k?.dept||'',
+    due_date:due.toISOString().split('T')[0]
+  };
+  sbInsert('kpi_corrective_action',data).then(async()=>{
+    caList=await sbSelect('kpi_corrective_action','order=id.desc');
+    drawTrend();
+    showToast('✅ '+year+'년 '+month+'월 시정조치 발행됨');
+  }).catch(e=>showToast('발행 실패: '+e.message));
+}
+
+// 추이 탭 → 미달건 시정조치 일괄 자동발행
+async function trendBatchIssueCa(kpiId,year){
+  const k=kpis.find(x=>x.id===kpiId);
+  if(!k)return;
+  const yearRecs=records.filter(r=>r.kpi_id===kpiId&&r.year===year);
+  const ngList=[];
+  for(let m=1;m<=12;m++){
+    const r=yearRecs.find(x=>x.month===m);
+    const v=r?r.actual_value:null;
+    const t=k.target_value;
+    if(v!==null&&t){
+      const j=judge(v,t,k.alert_value,k.direction);
+      if(j==='ng'&&!caList.find(ca=>ca.kpi_id===kpiId&&ca.record_year===year&&ca.record_month===m)){
+        ngList.push({month:m,actual:v,target:t});
+      }
+    }
+  }
+  if(!ngList.length){showToast('발행할 미달건이 없습니다');return}
+  if(!confirm(`${k.kpi_name}\n${year}년 미달 ${ngList.length}건에 대해 시정조치를 일괄 발행하시겠습니까?\n\n대상: ${ngList.map(x=>x.month+'월').join(', ')}`))return;
+  
+  const due=new Date();due.setDate(due.getDate()+14);
+  const batch=ngList.map(ng=>({
+    kpi_id:kpiId,record_year:year,record_month:ng.month,
+    actual_value:ng.actual,target_value:ng.target,status:'발행',
+    cause:'[자동발행] '+year+'년 '+ng.month+'월 KPI 미달 - 원인분석 필요',
+    action_plan:'[자동발행] 시정조치 계획 수립 필요',
+    responsible:k.dept||'',
+    due_date:due.toISOString().split('T')[0]
+  }));
+  try{
+    await sbInsert('kpi_corrective_action',batch);
+    caList=await sbSelect('kpi_corrective_action','order=id.desc');
+    drawTrend();
+    showToast(`✅ ${ngList.length}건 시정조치 일괄 발행 완료`);
+  }catch(e){showToast('일괄 발행 실패: '+e.message)}
+}
+
+// 추이 탭 → 전체 KPI 미달건 일괄 시정조치 발행
+async function trendBatchIssueAll(year){
+  const pid=document.getElementById('trendProc').value;
+  const filtered=pid?kpis.filter(k=>k.process_id===parseInt(pid)&&k.is_active):kpis.filter(k=>k.is_active);
+  const batch=[];
+  const due=new Date();due.setDate(due.getDate()+14);
+  filtered.forEach(k=>{
+    const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
+    for(let m=1;m<=12;m++){
+      const r=recs.find(x=>x.month===m);
+      const v=r?r.actual_value:null;
+      if(v!==null&&k.target_value!=null){
+        const j=judge(v,k.target_value,k.alert_value,k.direction);
+        if(j==='ng'&&!caList.find(ca=>ca.kpi_id===k.id&&ca.record_year===year&&ca.record_month===m)){
+          batch.push({
+            kpi_id:k.id,record_year:year,record_month:m,
+            actual_value:v,target_value:k.target_value,status:'발행',
+            cause:'[자동발행] '+year+'년 '+m+'월 '+k.kpi_name+' 미달 - 원인분석 필요',
+            action_plan:'[자동발행] 시정조치 계획 수립 필요',
+            responsible:k.dept||'',
+            due_date:due.toISOString().split('T')[0]
+          });
+        }
+      }
+    }
+  });
+  if(!batch.length){showToast('발행할 미달건이 없습니다');return}
+  if(!confirm(`${year}년 전체 미달 ${batch.length}건에 대해\n시정조치를 일괄 발행하시겠습니까?`))return;
+  try{
+    await sbInsert('kpi_corrective_action',batch);
+    caList=await sbSelect('kpi_corrective_action','order=id.desc');
+    drawTrendAll(year);
+    showToast(`✅ ${batch.length}건 시정조치 일괄 발행 완료`);
+  }catch(e){showToast('일괄 발행 실패: '+e.message)}
+}
+
 // ===== 추이 분석 =====
 let trendChartInst=null;
 
@@ -888,21 +982,56 @@ function drawTrend(){
     }
   });
 
-  let th='<table><tr><th>월</th><th>실적</th><th>목표</th><th>달성률</th><th>판정</th></tr>';
+  let th='<table><tr><th>월</th><th>실적</th><th>목표</th><th>달성률</th><th>판정</th><th>시정조치</th></tr>';
   for(let m=1;m<=12;m++){
     const r=yearRecs.find(x=>x.month===m);
     const v=r?r.actual_value:null;
     const t=k?k.target_value:null;
-    let pct='—',jBadge='<span class="badge b-na">—</span>';
+    let pct='—',jBadge='<span class="badge b-na">—</span>',jVal='na';
     if(v!==null&&t){
       pct=k.direction==='lower_better'?(t!==0?(t/v*100).toFixed(1):'—'):(v/t*100).toFixed(1);
-      const j=judge(v,t,k.alert_value,k.direction);
-      jBadge=j==='ok'?'<span class="badge b-ok">달성</span>':j==='ng'?'<span class="badge b-ng">미달</span>':'<span class="badge b-warn">주의</span>';
+      jVal=judge(v,t,k.alert_value,k.direction);
+      jBadge=jVal==='ok'?'<span class="badge b-ok">달성</span>':jVal==='ng'?'<span class="badge b-ng">미달</span>':'<span class="badge b-warn">주의</span>';
     }
-    th+=`<tr><td>${m}월</td><td style="font-weight:700">${v!==null?v:'—'}</td><td>${t??'—'}</td><td>${pct}%</td><td>${jBadge}</td></tr>`;
+    // 시정조치 열: 미달이면 자동발행 버튼 또는 발행됨 표시
+    let caCell='—';
+    if(jVal==='ng'){
+      const hasCa=caList.find(ca=>ca.kpi_id===kpiId&&ca.record_year===year&&ca.record_month===m);
+      if(hasCa){
+        const sc={'발행':'🔴','조치중':'🟡','효과확인':'🔵','완료':'✅'}[hasCa.status]||'⚪';
+        caCell=`<span style="font-size:10px;color:#1565c0;cursor:pointer" onclick="editCa(${hasCa.id})">${sc} ${hasCa.status}</span>`;
+      }else{
+        caCell=`<button onclick="trendAutoIssueCa(${kpiId},${year},${m},${v},${t})" style="font-size:10px;padding:3px 8px;border:1px solid #c62828;background:#ffebee;color:#c62828;border-radius:6px;cursor:pointer;font-weight:700;white-space:nowrap">🔧 발행</button>`;
+      }
+    }else if(jVal!=='na'){
+      const hasCa=caList.find(ca=>ca.kpi_id===kpiId&&ca.record_year===year&&ca.record_month===m);
+      if(hasCa){
+        const sc={'발행':'🔴','조치중':'🟡','효과확인':'🔵','완료':'✅'}[hasCa.status]||'⚪';
+        caCell=`<span style="font-size:10px;color:#1565c0;cursor:pointer" onclick="editCa(${hasCa.id})">${sc} ${hasCa.status}</span>`;
+      }
+    }
+    th+=`<tr><td>${m}월</td><td style="font-weight:700">${v!==null?v:'—'}</td><td>${t??'—'}</td><td>${pct}%</td><td>${jBadge}</td><td style="text-align:center">${caCell}</td></tr>`;
   }
   th+='</table>';
-  document.getElementById('trendTable').innerHTML=th;
+  // 미달 건 자동발행 일괄 버튼
+  let ngCount=0,ngNoCaCount=0;
+  for(let m=1;m<=12;m++){
+    const r=yearRecs.find(x=>x.month===m);
+    const v=r?r.actual_value:null;
+    const t=k?k.target_value:null;
+    if(v!==null&&t){
+      const j=judge(v,t,k.alert_value,k.direction);
+      if(j==='ng'){ngCount++;if(!caList.find(ca=>ca.kpi_id===kpiId&&ca.record_year===year&&ca.record_month===m))ngNoCaCount++}
+    }
+  }
+  let batchBtn='';
+  if(ngNoCaCount>0){
+    batchBtn=`<div style="margin-top:8px;padding:10px;background:#ffebee;border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:#c62828;font-weight:600">⚠ 미달 ${ngCount}건 중 미발행 ${ngNoCaCount}건</span>
+      <button onclick="trendBatchIssueCa(${kpiId},${year})" style="font-size:11px;padding:6px 14px;border:none;background:#c62828;color:#fff;border-radius:6px;cursor:pointer;font-weight:700">🔧 일괄 발행</button>
+    </div>`;
+  }
+  document.getElementById('trendTable').innerHTML=th+batchBtn;
 }
 
 function drawTrendAll(year){
@@ -932,6 +1061,7 @@ function drawTrendAll(year){
   let h='<table style="font-size:11px;white-space:nowrap"><tr><th style="min-width:130px">KPI</th><th>단위</th><th>목표</th>';
   for(let m=1;m<=12;m++)h+='<th>'+m+'월</th>';
   h+='<th style="background:#e3f2fd">평균</th><th style="background:#e3f2fd">달성률</th></tr>';
+  let totalNgNoCa=0;
   filtered.forEach(k=>{
     const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
     let sum=0,cnt=0;
@@ -939,9 +1069,22 @@ function drawTrendAll(year){
     for(let m=1;m<=12;m++){
       const r=recs.find(x=>x.month===m);const v=r?r.actual_value:null;
       if(v!==null){sum+=v;cnt++}
-      let bg='';
-      if(v!==null&&k.target_value!=null){const j=judge(v,k.target_value,k.alert_value,k.direction);bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1'}
-      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v:'—')+'</td>';
+      let bg='',caIcon='';
+      if(v!==null&&k.target_value!=null){
+        const j=judge(v,k.target_value,k.alert_value,k.direction);
+        bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1';
+        if(j==='ng'){
+          const hasCa=caList.find(ca=>ca.kpi_id===k.id&&ca.record_year===year&&ca.record_month===m);
+          if(hasCa){
+            const sc={'발행':'🔴','조치중':'🟡','효과확인':'🔵','완료':'✅'}[hasCa.status]||'⚪';
+            caIcon=`<span style="font-size:8px;cursor:pointer" onclick="editCa(${hasCa.id})" title="${hasCa.status}">${sc}</span>`;
+          }else{
+            totalNgNoCa++;
+            caIcon=`<span style="font-size:8px;cursor:pointer;color:#c62828" onclick="trendAutoIssueCa(${k.id},${year},${m},${v},${k.target_value})" title="시정조치 발행">🔧</span>`;
+          }
+        }
+      }
+      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v+''+caIcon:'—')+'</td>';
     }
     const avg=cnt?(sum/cnt).toFixed(1):'—';
     let pct='—';
@@ -950,7 +1093,14 @@ function drawTrendAll(year){
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
   });
   h+='</table>';
-  document.getElementById('trendTable').innerHTML='<div style="overflow-x:auto">'+h+'</div>';
+  let allBatchBtn='';
+  if(totalNgNoCa>0){
+    allBatchBtn=`<div style="margin-top:8px;padding:10px;background:#ffebee;border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:#c62828;font-weight:600">⚠ 미발행 시정조치 ${totalNgNoCa}건</span>
+      <button onclick="trendBatchIssueAll(${year})" style="font-size:11px;padding:6px 14px;border:none;background:#c62828;color:#fff;border-radius:6px;cursor:pointer;font-weight:700">🔧 전체 일괄 발행</button>
+    </div>`;
+  }
+  document.getElementById('trendTable').innerHTML='<div style="overflow-x:auto">'+h+'</div>'+allBatchBtn;
 }
 
 function drawSummary(){
