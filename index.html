@@ -221,11 +221,15 @@ tr:hover td{background:#fafafa}
       <button class="btn btn-sm btn-gray" onclick="initDefaultKpis()">📋 기본 KPI 일괄등록</button>
       <p style="font-size:10px;color:#999;margin-top:4px">* Supabase 테이블 생성 후 사용 (SQL 아래 참조)</p>
     </div>
-    <div style="margin-top:8px;padding:8px;background:#fff3e0;border:1px solid #ffcc80;border-radius:6px;font-size:11px;color:#e65100">
-      <b>⚠ 월별 목표 기능 사용 시</b><br>
-      Supabase SQL Editor에서 아래 ALTER 문을 1회 실행하세요:<br>
-      <code style="background:#fff;padding:2px 4px;border-radius:3px;font-size:10px;display:block;margin-top:4px;white-space:pre-wrap">ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_targets JSONB;
-ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_alerts JSONB;</code>
+    <div style="margin-top:8px;padding:10px;background:#fff3e0;border:1px solid #ffcc80;border-radius:6px;font-size:11px;color:#e65100">
+      <b>⚠ 월별 목표 기능 사용 시 (1회만 실행)</b><br>
+      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-blue" onclick="autoApplyMonthlySQL()" style="font-size:11px">🚀 자동 적용 시도</button>
+        <button class="btn btn-sm btn-gray" onclick="copyMonthlySQL()" style="font-size:11px">📋 SQL 복사</button>
+        <button class="btn btn-sm btn-gray" onclick="openSupabaseSqlEditor()" style="font-size:11px">🔗 SQL Editor 열기</button>
+        <button class="btn btn-sm btn-gray" onclick="checkMonthlyColumns()" style="font-size:11px">✓ 컬럼 확인</button>
+      </div>
+      <p style="font-size:10px;margin-top:6px;color:#666">자동 적용이 안 되면 'SQL 복사' → 'SQL Editor 열기' → 붙여넣고 RUN</p>
     </div>
     <details style="margin-top:10px">
       <summary style="font-size:12px;font-weight:600;color:#0d47a1;cursor:pointer">📄 Supabase SQL (테이블 생성)</summary>
@@ -609,7 +613,8 @@ function renderDash(){
       const bc=j==='ok'?'#e8f5e9':j==='ng'?'#ffebee':j==='warn'?'#fff8e1':'#fafafa';
       const tc=j==='ok'?'#2e7d32':j==='ng'?'#c62828':j==='warn'?'#f57f17':'#999';
       const icon=j==='ok'?'✅':j==='ng'?'❌':j==='warn'?'⚠️':'—';
-      const pct=(v!==null&&t)?((k.direction==='lower_better'&&t!==0)?(t/v*100).toFixed(1):(v/t*100).toFixed(1)):'—';
+      const pctVal=(v!==null&&t!=null)?calcAchievement(v,t,k.direction):null;
+      const pct=fmtPct(pctVal).replace('%','');
       const hasCa=caList.find(ca=>ca.kpi_id===k.id&&ca.record_year===y&&ca.record_month===m);
       const caBtn=(j==='ng'&&!hasCa)?`<button onclick="event.stopPropagation();autoIssueCa(${k.id},${y},${m},${v},${t})" style="font-size:9px;padding:2px 6px;border:1px solid #c62828;background:#fff;color:#c62828;border-radius:4px;cursor:pointer;font-weight:700;margin-top:2px">🔧시정</button>`:(hasCa?'<span style="font-size:9px;color:#1565c0">📋발행됨</span>':'');
       html+=`<div onclick="openDetailPopup(${k.id})" style="display:flex;align-items:center;gap:10px;padding:8px;background:${bc};border-radius:8px;margin-bottom:4px;cursor:pointer">
@@ -654,6 +659,34 @@ function getMonthAlert(k, month){
 function hasMonthlyTargets(k){
   if(!k||!Array.isArray(k.monthly_targets))return false;
   return k.monthly_targets.some(v=>v!==null&&v!==undefined&&v!==''&&!isNaN(parseFloat(v)));
+}
+
+// ★ 달성률 계산 (Infinity / NaN / 0 나누기 방지)
+// 반환: 숫자(소수점 1자리) 또는 null (계산 불가)
+function calcAchievement(actual, target, direction){
+  if(actual===null||actual===undefined||isNaN(actual))return null;
+  if(target===null||target===undefined||isNaN(target))return null;
+  if(direction==='lower_better'){
+    // 낮을수록 좋음: 목표/실적
+    // 실적이 0이고 목표가 0이면 100% (둘다 0이면 정확히 달성)
+    // 실적이 0이고 목표가 양수면 200% 표시 (목표 대비 매우 우수, 무한대 대신 캡)
+    if(actual===0){
+      if(target===0)return 100;
+      return 200; // 0 미달 = 목표보다 우수, Infinity 대신 200%로 캡
+    }
+    return (target/actual)*100;
+  }else{
+    // 높을수록 좋음: 실적/목표
+    if(target===0){
+      if(actual===0)return 100;
+      return 200; // 목표 0인데 달성한 경우, Infinity 방지
+    }
+    return (actual/target)*100;
+  }
+}
+function fmtPct(pct){
+  if(pct===null||pct===undefined||isNaN(pct)||!isFinite(pct))return '—';
+  return pct.toFixed(1)+'%';
 }
 
 function judge(val,target,alert,dir){
@@ -1080,8 +1113,9 @@ function drawTrend(){
     const t=k?getMonthTarget(k,m):null;
     const a=k?getMonthAlert(k,m):null;
     let pct='—',jBadge='<span class="badge b-na">—</span>',jVal='na';
-    if(v!==null&&t){
-      pct=k.direction==='lower_better'?(t!==0?(t/v*100).toFixed(1):'—'):(v/t*100).toFixed(1);
+    if(v!==null&&t!=null){
+      const pv=calcAchievement(v,t,k.direction);
+      pct=fmtPct(pv).replace('%','');
       jVal=judge(v,t,a,k.direction);
       jBadge=jVal==='ok'?'<span class="badge b-ok">달성</span>':jVal==='ng'?'<span class="badge b-ng">미달</span>':'<span class="badge b-warn">주의</span>';
     }
@@ -1194,7 +1228,10 @@ function drawTrendAll(year){
     let pct='—';
     // 달성률은 평균 목표 vs 평균 실적
     const avgT=targetCnt?(totalTargetSum/targetCnt):null;
-    if(cnt&&avgT){pct=k.direction==='lower_better'?(avgT/(sum/cnt)*100).toFixed(1):((sum/cnt)/avgT*100).toFixed(1)}
+    if(cnt&&avgT!=null){
+      const pv=calcAchievement(sum/cnt, avgT, k.direction);
+      pct=fmtPct(pv).replace('%','');
+    }
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
   });
@@ -1249,8 +1286,9 @@ function drawSummary(){
     const avg=cnt?( sum/cnt).toFixed(1):'—';
     let pct='—';
     const avgT=targetCnt?(totalTargetSum/targetCnt):null;
-    if(cnt&&avgT){
-      pct=k.direction==='lower_better'?(avgT/(sum/cnt)*100).toFixed(1):((sum/cnt)/avgT*100).toFixed(1);
+    if(cnt&&avgT!=null){
+      const pv=calcAchievement(sum/cnt, avgT, k.direction);
+      pct=fmtPct(pv).replace('%','');
     }
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
@@ -1455,8 +1493,9 @@ function histExcel(){
       const t=r.target_value!==null?r.target_value:(k?getMonthTarget(k,r.month):null);
       const a=k?getMonthAlert(k,r.month):null;
       let pct='',j='';
-      if(r.actual_value!==null&&t){
-        pct=k&&k.direction==='lower_better'?(t!==0?(t/r.actual_value*100).toFixed(1):''):(r.actual_value/t*100).toFixed(1);
+      if(r.actual_value!==null&&t!=null){
+        const pv=calcAchievement(r.actual_value,t,k?.direction);
+        pct=(pv!==null&&isFinite(pv))?pv.toFixed(1):'';
         const jv=judge(r.actual_value,t,a,k?.direction);
         j=jv==='ok'?'달성':jv==='ng'?'미달':'주의';
       }
@@ -1525,6 +1564,97 @@ function populateDeptSelect(selId,selectedVal){
   sel.innerHTML='<option value="">선택</option>';
   depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o)});
   if(selectedVal)sel.value=selectedVal;
+}
+
+// ===== ★ 월별 목표 컬럼 자동 적용/확인 =====
+const MONTHLY_SQL=`ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_targets JSONB;
+ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_alerts JSONB;`;
+
+// 1. 자동 적용 시도 (RPC exec_sql이 있는 경우만 동작)
+async function autoApplyMonthlySQL(){
+  if(!confirm('Supabase에 월별 목표 컬럼을 자동 추가합니다.\n\n실패하면 "SQL 복사" → "SQL Editor 열기" 버튼을 사용하세요.\n\n계속하시겠습니까?'))return;
+  try{
+    // Supabase RPC를 통한 SQL 실행 시도 (exec_sql 함수가 미리 만들어져 있어야 함)
+    const r=await fetch(getSbUrl()+'/rest/v1/rpc/exec_sql',{
+      method:'POST',
+      headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json'},
+      body:JSON.stringify({sql:MONTHLY_SQL})
+    });
+    if(r.ok){
+      showToast('✅ 자동 적용 성공! 월별 목표를 다시 저장해보세요');
+      await checkMonthlyColumns(true);
+      return;
+    }
+    // 실패 시: 권한이 없거나 함수가 없는 경우 → 수동 안내
+    const errTxt=await r.text();
+    const isNotFound=errTxt.includes('Could not find')||errTxt.includes('not found')||errTxt.includes('does not exist')||r.status===404;
+    if(isNotFound){
+      alert('❌ 자동 적용 불가\n\n[원인] Supabase Anon Key는 보안상 ALTER TABLE 같은 DDL 문을 실행할 수 없습니다.\n\n[해결] 아래 2단계 방법으로 진행해주세요:\n\n1. "📋 SQL 복사" 버튼 클릭\n2. "🔗 SQL Editor 열기" 버튼 클릭\n3. 열린 페이지에 붙여넣기 (Ctrl+V) 후 RUN 버튼 클릭\n\n→ 1회만 하면 영구 적용됩니다.');
+    }else{
+      alert('자동 적용 실패:\n'+errTxt+'\n\n수동 방법을 사용해주세요.');
+    }
+  }catch(e){
+    alert('자동 적용 실패: '+e.message+'\n\n"SQL 복사" 버튼을 사용해주세요.');
+  }
+}
+
+// 2. SQL 클립보드 복사
+async function copyMonthlySQL(){
+  try{
+    await navigator.clipboard.writeText(MONTHLY_SQL);
+    showToast('📋 SQL 복사됨! SQL Editor에 붙여넣기(Ctrl+V) 후 RUN');
+  }catch(e){
+    // 클립보드 API 실패 시 폴백
+    const ta=document.createElement('textarea');
+    ta.value=MONTHLY_SQL;
+    document.body.appendChild(ta);
+    ta.select();
+    try{document.execCommand('copy');showToast('📋 SQL 복사됨!');}
+    catch{prompt('아래 SQL을 복사해서 SQL Editor에 붙여넣으세요:',MONTHLY_SQL);}
+    document.body.removeChild(ta);
+  }
+}
+
+// 3. Supabase SQL Editor 새 탭으로 열기
+function openSupabaseSqlEditor(){
+  const url=getSbUrl();
+  // https://xxxxx.supabase.co → 프로젝트 ID 추출
+  const m=url.match(/https?:\/\/([^.]+)\.supabase\.co/);
+  if(m&&m[1]){
+    const projectId=m[1];
+    const sqlEditorUrl='https://supabase.com/dashboard/project/'+projectId+'/sql/new';
+    window.open(sqlEditorUrl,'_blank');
+    showToast('🔗 SQL Editor 열림. 붙여넣고 RUN 버튼 클릭');
+  }else{
+    alert('Supabase URL을 인식할 수 없습니다.\n\nhttps://supabase.com/dashboard 에서 직접 프로젝트를 열고\nSQL Editor에 접속하세요.');
+    window.open('https://supabase.com/dashboard','_blank');
+  }
+}
+
+// 4. 컬럼 존재 여부 확인
+async function checkMonthlyColumns(silent){
+  try{
+    // 빈 monthly_targets로 SELECT 시도 → 컬럼이 있으면 성공
+    const r=await fetch(getSbUrl()+'/rest/v1/kpi_master?select=id,monthly_targets,monthly_alerts&limit=1',{
+      headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey()}
+    });
+    if(r.ok){
+      if(!silent)alert('✅ 컬럼 확인 성공!\n\nmonthly_targets, monthly_alerts 컬럼이 정상 등록되어 있습니다.\n월별 목표 저장 기능을 사용할 수 있습니다.');
+      else showToast('✅ 컬럼 정상 등록됨');
+      return true;
+    }else{
+      const txt=await r.text();
+      if(txt.includes('monthly_targets')||txt.includes('monthly_alerts')||txt.includes('does not exist')){
+        if(!silent)alert('❌ 컬럼 없음\n\nmonthly_targets / monthly_alerts 컬럼이 아직 등록되지 않았습니다.\n\n"📋 SQL 복사" → "🔗 SQL Editor 열기" 후 SQL을 실행해주세요.');
+        return false;
+      }
+      if(!silent)alert('확인 실패: '+txt);
+      return false;
+    }
+  }catch(e){
+    if(!silent)alert('확인 실패: '+e.message);
+    return false;
+  }
 }
 
 function saveCfg(){
@@ -2002,8 +2132,9 @@ function exportExcel(mode){
       const t=r.target_value!==null?r.target_value:(k?getMonthTarget(k,r.month):null);
       const a=k?getMonthAlert(k,r.month):null;
       let pct='',j='';
-      if(r.actual_value!==null&&t){
-        pct=k&&k.direction==='lower_better'?(t!==0?(t/r.actual_value*100).toFixed(1):''):(r.actual_value/t*100).toFixed(1);
+      if(r.actual_value!==null&&t!=null){
+        const pv=calcAchievement(r.actual_value,t,k?.direction);
+        pct=(pv!==null&&isFinite(pv))?pv.toFixed(1):'';
         const jv=judge(r.actual_value,t,a,k?.direction);
         j=jv==='ok'?'달성':jv==='ng'?'미달':'주의';
       }
