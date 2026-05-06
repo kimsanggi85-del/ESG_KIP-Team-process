@@ -221,6 +221,12 @@ tr:hover td{background:#fafafa}
       <button class="btn btn-sm btn-gray" onclick="initDefaultKpis()">📋 기본 KPI 일괄등록</button>
       <p style="font-size:10px;color:#999;margin-top:4px">* Supabase 테이블 생성 후 사용 (SQL 아래 참조)</p>
     </div>
+    <div style="margin-top:8px;padding:8px;background:#fff3e0;border:1px solid #ffcc80;border-radius:6px;font-size:11px;color:#e65100">
+      <b>⚠ 월별 목표 기능 사용 시</b><br>
+      Supabase SQL Editor에서 아래 ALTER 문을 1회 실행하세요:<br>
+      <code style="background:#fff;padding:2px 4px;border-radius:3px;font-size:10px;display:block;margin-top:4px;white-space:pre-wrap">ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_targets JSONB;
+ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_alerts JSONB;</code>
+    </div>
     <details style="margin-top:10px">
       <summary style="font-size:12px;font-weight:600;color:#0d47a1;cursor:pointer">📄 Supabase SQL (테이블 생성)</summary>
       <pre style="font-size:10px;background:#f5f5f5;padding:10px;border-radius:8px;overflow-x:auto;margin-top:6px;white-space:pre-wrap">
@@ -252,6 +258,9 @@ CREATE TABLE IF NOT EXISTS kpi_master (
 
 -- 기존 테이블에 dept 컬럼 추가 (이미 테이블이 있는 경우)
 ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS dept TEXT;
+-- ★ 월별 목표/경고 컬럼 (JSON 배열, 1~12월)
+ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_targets JSONB;
+ALTER TABLE kpi_master ADD COLUMN IF NOT EXISTS monthly_alerts JSONB;
 
 -- 월별 실적
 CREATE TABLE IF NOT EXISTS kpi_record (
@@ -315,9 +324,37 @@ CREATE POLICY "kpi_ca_all" ON kpi_corrective_action FOR ALL USING (true) WITH CH
     <div class="fg"><label>단위</label><input type="text" id="kpiUnit" placeholder="%, ppm, 건, 점" value="%"></div>
     <div class="fg"><label>방향</label><select id="kpiDir"><option value="higher_better">높을수록 좋음 (↑)</option><option value="lower_better">낮을수록 좋음 (↓)</option></select></div>
     <div style="display:flex;gap:8px">
-      <div class="fg" style="flex:1"><label>목표값</label><input type="number" id="kpiTarget" step="any" placeholder="예: 99.5"></div>
-      <div class="fg" style="flex:1"><label>경고값</label><input type="number" id="kpiAlert" step="any" placeholder="예: 98"></div>
+      <div class="fg" style="flex:1"><label>목표값 (기본)</label><input type="number" id="kpiTarget" step="any" placeholder="예: 99.5"></div>
+      <div class="fg" style="flex:1"><label>경고값 (기본)</label><input type="number" id="kpiAlert" step="any" placeholder="예: 98"></div>
     </div>
+
+    <!-- ★ 월별 목표 설정 -->
+    <div class="fg" style="background:#f3f8ff;padding:10px;border-radius:8px;border:1px solid #cfe0ff">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:6px">
+        <input type="checkbox" id="kpiUseMonthly" onchange="toggleMonthlyTargets()" style="width:16px;height:16px">
+        <span style="font-weight:700;color:#0d47a1;font-size:13px">📅 월별 목표 설정 사용</span>
+      </label>
+      <div style="font-size:10px;color:#666;margin-bottom:6px">팀별/계절별로 월마다 목표가 다른 경우 체크. 미입력 월은 위의 기본 목표값 적용</div>
+      <div id="kpiMonthlyBox" style="display:none">
+        <div style="display:flex;gap:4px;margin-bottom:6px;align-items:center">
+          <input type="number" id="kpiBulkTarget" step="any" placeholder="목표 일괄" style="flex:1;padding:5px;font-size:11px;border:1px solid #ddd;border-radius:4px">
+          <input type="number" id="kpiBulkAlert" step="any" placeholder="경고 일괄" style="flex:1;padding:5px;font-size:11px;border:1px solid #ddd;border-radius:4px">
+          <button type="button" onclick="bulkFillMonthly()" style="padding:5px 10px;font-size:11px;border:1px solid #1565c0;background:#1565c0;color:#fff;border-radius:4px;cursor:pointer;white-space:nowrap">일괄적용</button>
+          <button type="button" onclick="clearMonthly()" style="padding:5px 8px;font-size:11px;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer;white-space:nowrap">초기화</button>
+        </div>
+        <table style="width:100%;font-size:11px;border-collapse:collapse">
+          <thead>
+            <tr style="background:#e3f2fd">
+              <th style="padding:4px;border:1px solid #cfe0ff;width:36px">월</th>
+              <th style="padding:4px;border:1px solid #cfe0ff">목표값</th>
+              <th style="padding:4px;border:1px solid #cfe0ff">경고값</th>
+            </tr>
+          </thead>
+          <tbody id="kpiMonthlyRows"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="fg"><label>IATF 조항</label><input type="text" id="kpiClause" placeholder="예: 9.1.2, 8.5.1"></div>
     <div class="fg"><label>담당부서</label><select id="kpiDept" style="font-size:13px"><option value="">선택</option></select></div>
     <div class="fg"><label>측정주기</label><select id="kpiFreq"><option value="monthly">월별</option><option value="quarterly">분기별</option><option value="yearly">연간</option></select></div>
@@ -434,12 +471,23 @@ function openDetailPopup(kpiId){
 
   // 현재 설정값
   const dir=k.direction==='lower_better'?'낮을수록 좋음 (↓)':'높을수록 좋음 (↑)';
+  let monthlyHtml='';
+  if(hasMonthlyTargets(k)){
+    monthlyHtml='<div style="margin-top:6px;font-size:11px"><b style="color:#e65100">📅 월별 목표:</b><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:4px">';
+    for(let m=1;m<=12;m++){
+      const t=getMonthTarget(k,m);
+      const a=getMonthAlert(k,m);
+      monthlyHtml+=`<div style="text-align:center;background:#fff;border:1px solid #ffe0b2;border-radius:4px;padding:3px;font-size:10px"><div style="font-weight:600;color:#e65100">${m}월</div><div>${t??'—'}</div>${a!=null?`<div style="color:#999;font-size:9px">⚠${a}</div>`:''}</div>`;
+    }
+    monthlyHtml+='</div></div>';
+  }
   html+=`<div style="padding:10px;background:#fafafa;border-radius:8px;border:1px solid #eee">
     <div style="font-size:12px;color:#555;margin-bottom:4px">⚙ 현재 설정</div>
     <div style="font-size:12px;color:#333">
       단위: <b>${k.unit||'—'}</b> · 방향: <b>${dir}</b><br>
-      목표: <b>${k.target_value??'—'}</b> · 경고: <b>${k.alert_value??'—'}</b> · 주기: <b>${k.frequency||'monthly'}</b>
+      기본 목표: <b>${k.target_value??'—'}</b> · 기본 경고: <b>${k.alert_value??'—'}</b> · 주기: <b>${k.frequency||'monthly'}</b>
     </div>
+    ${monthlyHtml}
     ${k.description?'<div style="font-size:11px;color:#888;margin-top:4px">'+k.description+'</div>':''}
   </div>`;
 
@@ -523,8 +571,11 @@ function renderDash(){
   activeKpis.forEach(k=>{
     const rec=monthRecs.find(r=>r.kpi_id===k.id);
     if(!rec||rec.actual_value===null||rec.actual_value===undefined){na++;return}
-    const t=rec.target_value!==null&&rec.target_value!==undefined?rec.target_value:k.target_value;
-    const a=k.alert_value;
+    // ★ 월별 목표/경고 우선 적용
+    const monthT=getMonthTarget(k,m);
+    const monthA=getMonthAlert(k,m);
+    const t=rec.target_value!==null&&rec.target_value!==undefined?rec.target_value:monthT;
+    const a=monthA;
     const v=parseFloat(rec.actual_value);
     const j=judge(v,t,a,k.direction);
     if(j==='ok')ok++;else if(j==='ng')ng++;else warn++;
@@ -550,8 +601,11 @@ function renderDash(){
     grouped[pn].forEach(k=>{
       const rec=monthRecs.find(r=>r.kpi_id===k.id);
       const v=rec?parseFloat(rec.actual_value):null;
-      const t=(rec&&rec.target_value!==null&&rec.target_value!==undefined)?rec.target_value:k.target_value;
-      const j=(v!==null&&!isNaN(v))?judge(v,t,k.alert_value,k.direction):'na';
+      // ★ 월별 목표/경고 우선
+      const monthT=getMonthTarget(k,m);
+      const monthA=getMonthAlert(k,m);
+      const t=(rec&&rec.target_value!==null&&rec.target_value!==undefined)?rec.target_value:monthT;
+      const j=(v!==null&&!isNaN(v))?judge(v,t,monthA,k.direction):'na';
       const bc=j==='ok'?'#e8f5e9':j==='ng'?'#ffebee':j==='warn'?'#fff8e1':'#fafafa';
       const tc=j==='ok'?'#2e7d32':j==='ng'?'#c62828':j==='warn'?'#f57f17':'#999';
       const icon=j==='ok'?'✅':j==='ng'?'❌':j==='warn'?'⚠️':'—';
@@ -574,6 +628,32 @@ function renderDash(){
     html+='</div>';
   });
   body.innerHTML=html;
+}
+
+// ===== ★ 월별 목표/경고 헬퍼 =====
+// kpi_master.monthly_targets / monthly_alerts 는 JSONB 배열 [m1..m12]
+// 해당 월 값이 null/undefined이면 기본값(target_value/alert_value)으로 폴백
+function getMonthTarget(k, month){
+  if(!k)return null;
+  const arr=k.monthly_targets;
+  if(Array.isArray(arr)&&month>=1&&month<=12){
+    const v=arr[month-1];
+    if(v!==null&&v!==undefined&&v!==''&&!isNaN(parseFloat(v)))return parseFloat(v);
+  }
+  return (k.target_value!==null&&k.target_value!==undefined)?k.target_value:null;
+}
+function getMonthAlert(k, month){
+  if(!k)return null;
+  const arr=k.monthly_alerts;
+  if(Array.isArray(arr)&&month>=1&&month<=12){
+    const v=arr[month-1];
+    if(v!==null&&v!==undefined&&v!==''&&!isNaN(parseFloat(v)))return parseFloat(v);
+  }
+  return (k.alert_value!==null&&k.alert_value!==undefined)?k.alert_value:null;
+}
+function hasMonthlyTargets(k){
+  if(!k||!Array.isArray(k.monthly_targets))return false;
+  return k.monthly_targets.some(v=>v!==null&&v!==undefined&&v!==''&&!isNaN(parseFloat(v)));
 }
 
 function judge(val,target,alert,dir){
@@ -621,7 +701,9 @@ function loadRecKpis(){
     grouped[pn].forEach(k=>{
       const rec=monthRecs.find(r=>r.kpi_id===k.id);
       const v=rec?rec.actual_value:'';
-      const t=(rec&&rec.target_value!==null)?rec.target_value:k.target_value;
+      // ★ 월별 목표 우선
+      const monthT=getMonthTarget(k,m);
+      const t=(rec&&rec.target_value!==null)?rec.target_value:monthT;
       const n=rec?rec.note||'':'';
       html+=`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="${k.id}">
         <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">${k.kpi_name}</div><div style="font-size:10px;color:#888">목표:${t??'—'} ${k.unit||''}</div></div>
@@ -650,7 +732,7 @@ async function saveAllRecords(){
       year:y,
       month:m,
       actual_value:parseFloat(v),
-      target_value:k?k.target_value:null,
+      target_value:k?getMonthTarget(k,m):null,
       note:noteEl?noteEl.value.trim():''
     });
   });
@@ -854,9 +936,10 @@ async function trendBatchIssueCa(kpiId,year){
   for(let m=1;m<=12;m++){
     const r=yearRecs.find(x=>x.month===m);
     const v=r?r.actual_value:null;
-    const t=k.target_value;
+    const t=getMonthTarget(k,m);
+    const a=getMonthAlert(k,m);
     if(v!==null&&t){
-      const j=judge(v,t,k.alert_value,k.direction);
+      const j=judge(v,t,a,k.direction);
       if(j==='ng'&&!caList.find(ca=>ca.kpi_id===kpiId&&ca.record_year===year&&ca.record_month===m)){
         ngList.push({month:m,actual:v,target:t});
       }
@@ -893,12 +976,14 @@ async function trendBatchIssueAll(year){
     for(let m=1;m<=12;m++){
       const r=recs.find(x=>x.month===m);
       const v=r?r.actual_value:null;
-      if(v!==null&&k.target_value!=null){
-        const j=judge(v,k.target_value,k.alert_value,k.direction);
+      const t=getMonthTarget(k,m);
+      const a=getMonthAlert(k,m);
+      if(v!==null&&t!=null){
+        const j=judge(v,t,a,k.direction);
         if(j==='ng'&&!caList.find(ca=>ca.kpi_id===k.id&&ca.record_year===year&&ca.record_month===m)){
           batch.push({
             kpi_id:k.id,record_year:year,record_month:m,
-            actual_value:v,target_value:k.target_value,status:'발행',
+            actual_value:v,target_value:t,status:'발행',
             cause:'[자동발행] '+year+'년 '+m+'월 '+k.kpi_name+' 미달 - 원인분석 필요',
             action_plan:'[자동발행] 시정조치 계획 수립 필요',
             responsible:k.dept||'',
@@ -963,7 +1048,8 @@ function drawTrend(){
     labels.push(m+'월');
     const r=yearRecs.find(x=>x.month===m);
     actuals.push(r?r.actual_value:null);
-    targets.push(k?k.target_value:null);
+    // ★ 월별 목표값을 라인으로 표시
+    targets.push(k?getMonthTarget(k,m):null);
   }
 
   const ctx=document.getElementById('trendChart').getContext('2d');
@@ -974,7 +1060,7 @@ function drawTrend(){
       labels,
       datasets:[
         {label:'실적',data:actuals,borderColor:'#1565c0',backgroundColor:'rgba(21,101,192,.1)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#1565c0'},
-        {label:'목표',data:targets,borderColor:'#c62828',borderDash:[6,3],pointRadius:0,fill:false}
+        {label:'목표',data:targets,borderColor:'#c62828',borderDash:[6,3],pointRadius:hasMonthlyTargets(k)?3:0,pointBackgroundColor:'#c62828',fill:false,stepped:hasMonthlyTargets(k)?'before':false}
       ]
     },
     options:{
@@ -991,11 +1077,12 @@ function drawTrend(){
   for(let m=1;m<=12;m++){
     const r=yearRecs.find(x=>x.month===m);
     const v=r?r.actual_value:null;
-    const t=k?k.target_value:null;
+    const t=k?getMonthTarget(k,m):null;
+    const a=k?getMonthAlert(k,m):null;
     let pct='—',jBadge='<span class="badge b-na">—</span>',jVal='na';
     if(v!==null&&t){
       pct=k.direction==='lower_better'?(t!==0?(t/v*100).toFixed(1):'—'):(v/t*100).toFixed(1);
-      jVal=judge(v,t,k.alert_value,k.direction);
+      jVal=judge(v,t,a,k.direction);
       jBadge=jVal==='ok'?'<span class="badge b-ok">달성</span>':jVal==='ng'?'<span class="badge b-ng">미달</span>':'<span class="badge b-warn">주의</span>';
     }
     // 시정조치 열: 미달이면 자동발행 버튼 또는 발행됨 표시
@@ -1023,9 +1110,10 @@ function drawTrend(){
   for(let m=1;m<=12;m++){
     const r=yearRecs.find(x=>x.month===m);
     const v=r?r.actual_value:null;
-    const t=k?k.target_value:null;
+    const t=k?getMonthTarget(k,m):null;
+    const a=k?getMonthAlert(k,m):null;
     if(v!==null&&t){
-      const j=judge(v,t,k.alert_value,k.direction);
+      const j=judge(v,t,a,k.direction);
       if(j==='ng'){ngCount++;if(!caList.find(ca=>ca.kpi_id===kpiId&&ca.record_year===year&&ca.record_month===m))ngNoCaCount++}
     }
   }
@@ -1070,13 +1158,22 @@ function drawTrendAll(year){
   filtered.forEach(k=>{
     const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
     let sum=0,cnt=0;
-    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+(k.unit||'')+'</td><td style="color:#c62828">'+(k.target_value??'—')+'</td>';
+    // ★ 월별 목표가 있으면 "월별" 라벨, 없으면 단일값
+    const isMonthly=hasMonthlyTargets(k);
+    const targetCell=isMonthly
+      ?'<span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">📅월별</span>'
+      :(k.target_value??'—');
+    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+(k.unit||'')+'</td><td style="color:#c62828">'+targetCell+'</td>';
+    let totalTargetSum=0,targetCnt=0; // 달성률 계산용 평균 목표
     for(let m=1;m<=12;m++){
       const r=recs.find(x=>x.month===m);const v=r?r.actual_value:null;
+      const monthT=getMonthTarget(k,m);
+      const monthA=getMonthAlert(k,m);
       if(v!==null){sum+=v;cnt++}
+      if(monthT!=null){totalTargetSum+=monthT;targetCnt++}
       let bg='',caIcon='';
-      if(v!==null&&k.target_value!=null){
-        const j=judge(v,k.target_value,k.alert_value,k.direction);
+      if(v!==null&&monthT!=null){
+        const j=judge(v,monthT,monthA,k.direction);
         bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1';
         if(j==='ng'){
           const hasCa=caList.find(ca=>ca.kpi_id===k.id&&ca.record_year===year&&ca.record_month===m);
@@ -1085,15 +1182,19 @@ function drawTrendAll(year){
             caIcon=`<span style="font-size:8px;cursor:pointer" onclick="editCa(${hasCa.id})" title="${hasCa.status}">${sc}</span>`;
           }else{
             totalNgNoCa++;
-            caIcon=`<span style="font-size:8px;cursor:pointer;color:#c62828" onclick="trendAutoIssueCa(${k.id},${year},${m},${v},${k.target_value})" title="시정조치 발행">🔧</span>`;
+            caIcon=`<span style="font-size:8px;cursor:pointer;color:#c62828" onclick="trendAutoIssueCa(${k.id},${year},${m},${v},${monthT})" title="시정조치 발행">🔧</span>`;
           }
         }
       }
-      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v+''+caIcon:'—')+'</td>';
+      // 월별 목표가 있으면 셀에 작게 목표 표시
+      const targetTip=isMonthly&&monthT!=null?`<span style="font-size:8px;color:#999;display:block">목표:${monthT}</span>`:'';
+      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v+''+caIcon:'—')+targetTip+'</td>';
     }
     const avg=cnt?(sum/cnt).toFixed(1):'—';
     let pct='—';
-    if(cnt&&k.target_value){pct=k.direction==='lower_better'?(k.target_value/(sum/cnt)*100).toFixed(1):((sum/cnt)/k.target_value*100).toFixed(1)}
+    // 달성률은 평균 목표 vs 평균 실적
+    const avgT=targetCnt?(totalTargetSum/targetCnt):null;
+    if(cnt&&avgT){pct=k.direction==='lower_better'?(avgT/(sum/cnt)*100).toFixed(1):((sum/cnt)/avgT*100).toFixed(1)}
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
   });
@@ -1123,22 +1224,33 @@ function drawSummary(){
   procKpis.forEach(k=>{
     const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
     let sum=0,cnt=0;
-    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+( k.unit||'')+'</td><td style="color:#c62828">'+(k.target_value??'—')+'</td>';
+    // ★ 월별 목표 표시
+    const isMonthly=hasMonthlyTargets(k);
+    const targetCell=isMonthly
+      ?'<span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">📅월별</span>'
+      :(k.target_value??'—');
+    h+='<tr><td style="font-weight:600">'+k.kpi_name+'</td><td>'+( k.unit||'')+'</td><td style="color:#c62828">'+targetCell+'</td>';
+    let totalTargetSum=0,targetCnt=0;
     for(let m=1;m<=12;m++){
       const r=recs.find(x=>x.month===m);
       const v=r?r.actual_value:null;
+      const monthT=getMonthTarget(k,m);
+      const monthA=getMonthAlert(k,m);
       if(v!==null){sum+=v;cnt++}
+      if(monthT!=null){totalTargetSum+=monthT;targetCnt++}
       let bg='';
-      if(v!==null&&k.target_value!=null){
-        const j=judge(v,k.target_value,k.alert_value,k.direction);
+      if(v!==null&&monthT!=null){
+        const j=judge(v,monthT,monthA,k.direction);
         bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1';
       }
-      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v:'—')+'</td>';
+      const targetTip=isMonthly&&monthT!=null?`<span style="font-size:8px;color:#999;display:block">목표:${monthT}</span>`:'';
+      h+='<td style="text-align:right;'+bg+'">'+(v!==null?v:'—')+targetTip+'</td>';
     }
     const avg=cnt?( sum/cnt).toFixed(1):'—';
     let pct='—';
-    if(cnt&&k.target_value){
-      pct=k.direction==='lower_better'?(k.target_value/(sum/cnt)*100).toFixed(1):((sum/cnt)/k.target_value*100).toFixed(1);
+    const avgT=targetCnt?(totalTargetSum/targetCnt):null;
+    if(cnt&&avgT){
+      pct=k.direction==='lower_better'?(avgT/(sum/cnt)*100).toFixed(1):((sum/cnt)/avgT*100).toFixed(1);
     }
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+avg+'</td>';
     h+='<td style="text-align:right;font-weight:700;background:#e3f2fd">'+(pct!=='—'?pct+'%':'—')+'</td></tr>';
@@ -1221,8 +1333,10 @@ function renderHistRecordTable(){
   histData.forEach(r=>{
     const k=kpis.find(x=>x.id===r.kpi_id);
     const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
-    const t=r.target_value!==null?r.target_value:(k?k.target_value:null);
-    const j=(r.actual_value!==null&&t)?judge(r.actual_value,t,k?.alert_value,k?.direction):'na';
+    // ★ 저장된 record.target_value 우선, 없으면 월별 목표
+    const t=r.target_value!==null?r.target_value:(k?getMonthTarget(k,r.month):null);
+    const a=k?getMonthAlert(k,r.month):null;
+    const j=(r.actual_value!==null&&t)?judge(r.actual_value,t,a,k?.direction):'na';
     const jb=j==='ok'?'<span class="badge b-ok">달성</span>':j==='ng'?'<span class="badge b-ng">미달</span>':j==='warn'?'<span class="badge b-warn">주의</span>':'<span class="badge b-na">—</span>';
     html+=`<tr>
       <td>${r.year}.${String(r.month).padStart(2,'0')}</td>
@@ -1337,11 +1451,13 @@ function histExcel(){
     const rows=histData.map(r=>{
       const k=kpis.find(x=>x.id===r.kpi_id);
       const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
-      const t=r.target_value!==null?r.target_value:(k?k.target_value:null);
+      // ★ 월별 목표 우선
+      const t=r.target_value!==null?r.target_value:(k?getMonthTarget(k,r.month):null);
+      const a=k?getMonthAlert(k,r.month):null;
       let pct='',j='';
       if(r.actual_value!==null&&t){
         pct=k&&k.direction==='lower_better'?(t!==0?(t/r.actual_value*100).toFixed(1):''):(r.actual_value/t*100).toFixed(1);
-        const jv=judge(r.actual_value,t,k?.alert_value,k?.direction);
+        const jv=judge(r.actual_value,t,a,k?.direction);
         j=jv==='ok'?'달성':jv==='ng'?'미달':'주의';
       }
       return[r.year,r.month,pn,k?.kpi_name||'',r.actual_value,t,pct?pct+'%':'',j,r.note||''];
@@ -1470,9 +1586,13 @@ function renderKpiList(){
   filtered.forEach(k=>{
     const pn=processes.find(p=>p.id===k.process_id)?.name||'?';
     const dir=k.direction==='lower_better'?'↓':'↑';
+    const isMonthly=hasMonthlyTargets(k);
+    const targetCell=isMonthly
+      ?`<span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700" title="월별 목표 설정됨">📅월별</span>`
+      :(k.target_value??'—');
     html+=`<tr>
       <td>${pn}</td><td style="font-weight:600">${k.kpi_name}</td><td style="font-size:11px">${k.dept||'—'}</td><td>${k.unit||''}</td><td>${dir}</td>
-      <td>${k.target_value??'—'}</td><td>${k.alert_value??'—'}</td><td style="font-size:10px">${k.iatf_clause||''}</td>
+      <td>${targetCell}</td><td>${k.alert_value??'—'}</td><td style="font-size:10px">${k.iatf_clause||''}</td>
       <td>${k.is_active?'<span class="badge b-ok">ON</span>':'<span class="badge b-na">OFF</span>'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-gray" onclick="editKpi(${k.id})">수정</button>
@@ -1482,6 +1602,71 @@ function renderKpiList(){
   });
   html+='</table>';
   c.innerHTML=html;
+}
+
+function buildMonthlyRows(){
+  const tb=document.getElementById('kpiMonthlyRows');
+  if(!tb)return;
+  if(tb.children.length===12)return; // 이미 빌드됨
+  tb.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="padding:3px;border:1px solid #e3f2fd;text-align:center;font-weight:600;background:#fafafa">${m}월</td>
+      <td style="padding:2px;border:1px solid #e3f2fd"><input type="number" step="any" id="kpiMT_${m}" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-family:inherit"></td>
+      <td style="padding:2px;border:1px solid #e3f2fd"><input type="number" step="any" id="kpiMA_${m}" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-family:inherit"></td>`;
+    tb.appendChild(tr);
+  }
+}
+function toggleMonthlyTargets(){
+  const on=document.getElementById('kpiUseMonthly').checked;
+  document.getElementById('kpiMonthlyBox').style.display=on?'block':'none';
+  if(on)buildMonthlyRows();
+}
+function bulkFillMonthly(){
+  const t=document.getElementById('kpiBulkTarget').value;
+  const a=document.getElementById('kpiBulkAlert').value;
+  for(let m=1;m<=12;m++){
+    if(t!=='')document.getElementById('kpiMT_'+m).value=t;
+    if(a!=='')document.getElementById('kpiMA_'+m).value=a;
+  }
+}
+function clearMonthly(){
+  for(let m=1;m<=12;m++){
+    document.getElementById('kpiMT_'+m).value='';
+    document.getElementById('kpiMA_'+m).value='';
+  }
+  document.getElementById('kpiBulkTarget').value='';
+  document.getElementById('kpiBulkAlert').value='';
+}
+function fillMonthlyInputs(targets, alerts){
+  buildMonthlyRows();
+  for(let m=1;m<=12;m++){
+    const tEl=document.getElementById('kpiMT_'+m);
+    const aEl=document.getElementById('kpiMA_'+m);
+    if(tEl){
+      const v=Array.isArray(targets)?targets[m-1]:null;
+      tEl.value=(v!==null&&v!==undefined&&v!=='')?v:'';
+    }
+    if(aEl){
+      const v=Array.isArray(alerts)?alerts[m-1]:null;
+      aEl.value=(v!==null&&v!==undefined&&v!=='')?v:'';
+    }
+  }
+}
+function readMonthlyInputs(){
+  const targets=[],alerts=[];
+  let hasT=false,hasA=false;
+  for(let m=1;m<=12;m++){
+    const tEl=document.getElementById('kpiMT_'+m);
+    const aEl=document.getElementById('kpiMA_'+m);
+    const tv=(tEl&&tEl.value!=='')?parseFloat(tEl.value):null;
+    const av=(aEl&&aEl.value!=='')?parseFloat(aEl.value):null;
+    if(tv!==null&&!isNaN(tv))hasT=true;
+    if(av!==null&&!isNaN(av))hasA=true;
+    targets.push(tv);
+    alerts.push(av);
+  }
+  return {targets:hasT?targets:null, alerts:hasA?alerts:null};
 }
 
 function openKpiModal(data){
@@ -1503,6 +1688,16 @@ function openKpiModal(data){
     document.getElementById('kpiFreq').value=data.frequency||'monthly';
     document.getElementById('kpiDesc').value=data.description||'';
     document.getElementById('kpiSort').value=data.sort_order||0;
+    // ★ 월별 목표 로드
+    const useMonthly=hasMonthlyTargets(data)||(Array.isArray(data.monthly_alerts)&&data.monthly_alerts.some(v=>v!==null&&v!==undefined&&v!==''));
+    document.getElementById('kpiUseMonthly').checked=useMonthly;
+    document.getElementById('kpiMonthlyBox').style.display=useMonthly?'block':'none';
+    if(useMonthly){
+      fillMonthlyInputs(data.monthly_targets, data.monthly_alerts);
+    }else{
+      buildMonthlyRows();
+      clearMonthly();
+    }
   }else{
     document.getElementById('kpiEditId').value='';
     document.getElementById('kpiName').value='';
@@ -1515,12 +1710,19 @@ function openKpiModal(data){
     document.getElementById('kpiFreq').value='monthly';
     document.getElementById('kpiDesc').value='';
     document.getElementById('kpiSort').value=0;
+    // ★ 월별 목표 초기화
+    document.getElementById('kpiUseMonthly').checked=false;
+    document.getElementById('kpiMonthlyBox').style.display='none';
+    buildMonthlyRows();
+    clearMonthly();
   }
 }
 function closeKpiModal(){document.getElementById('kpiModal').classList.remove('show')}
 
 async function saveKpi(){
   const id=document.getElementById('kpiEditId').value;
+  const useMonthly=document.getElementById('kpiUseMonthly').checked;
+  const m=useMonthly?readMonthlyInputs():{targets:null,alerts:null};
   const data={
     process_id:parseInt(document.getElementById('kpiProc').value),
     kpi_name:document.getElementById('kpiName').value.trim(),
@@ -1528,6 +1730,8 @@ async function saveKpi(){
     direction:document.getElementById('kpiDir').value,
     target_value:document.getElementById('kpiTarget').value?parseFloat(document.getElementById('kpiTarget').value):null,
     alert_value:document.getElementById('kpiAlert').value?parseFloat(document.getElementById('kpiAlert').value):null,
+    monthly_targets:m.targets,
+    monthly_alerts:m.alerts,
     iatf_clause:document.getElementById('kpiClause').value.trim(),
     dept:document.getElementById('kpiDept').value,
     frequency:document.getElementById('kpiFreq').value,
@@ -1540,7 +1744,23 @@ async function saveKpi(){
     if(id)await sbUpdate('kpi_master',id,data);
     else await sbInsert('kpi_master',data);
     closeKpiModal();await loadAll();renderKpiList();showToast('✅ 저장됨');
-  }catch(e){showToast('저장 실패: '+e.message)}
+  }catch(e){
+    // ★ monthly_targets/monthly_alerts 컬럼이 없을 경우 자동 폴백
+    const msg=e.message||'';
+    if(msg.includes('monthly_targets')||msg.includes('monthly_alerts')){
+      try{
+        const fallback={...data};
+        delete fallback.monthly_targets;
+        delete fallback.monthly_alerts;
+        if(id)await sbUpdate('kpi_master',id,fallback);
+        else await sbInsert('kpi_master',fallback);
+        closeKpiModal();await loadAll();renderKpiList();
+        showToast('⚠ 월별 목표 컬럼이 없어 기본 목표만 저장됨\n설정 탭의 SQL을 실행하세요');
+        return;
+      }catch(e2){showToast('저장 실패: '+e2.message);return}
+    }
+    showToast('저장 실패: '+msg);
+  }
 }
 
 function editKpi(id){const k=kpis.find(x=>x.id===id);if(k)openKpiModal(k)}
@@ -1754,10 +1974,21 @@ function exportExcel(mode){
   const today=new Date().toISOString().split('T')[0].replace(/-/g,'');
 
   if(mode==='kpi'||mode==='all'){
-    const hd=['ID','프로세스','KPI명','담당부서','단위','방향','목표값','경고값','IATF조항','주기','설명','활성'];
+    const hd=['ID','프로세스','KPI명','담당부서','단위','방향','목표값','경고값','IATF조항','주기','설명','활성',
+      '1월목표','2월목표','3월목표','4월목표','5월목표','6월목표','7월목표','8월목표','9월목표','10월목표','11월목표','12월목표',
+      '1월경고','2월경고','3월경고','4월경고','5월경고','6월경고','7월경고','8월경고','9월경고','10월경고','11월경고','12월경고'];
     const rows=kpis.map(k=>{
       const pn=processes.find(p=>p.id===k.process_id)?.name||'';
-      return[k.id,pn,k.kpi_name,k.dept||'',k.unit,k.direction==='lower_better'?'낮을수록':'높을수록',k.target_value,k.alert_value,k.iatf_clause,k.frequency,k.description,k.is_active?'Y':'N'];
+      const mt=k.monthly_targets||[];
+      const ma=k.monthly_alerts||[];
+      const monthlyT=[];
+      const monthlyA=[];
+      for(let i=0;i<12;i++){
+        monthlyT.push((Array.isArray(mt)&&mt[i]!==null&&mt[i]!==undefined)?mt[i]:'');
+        monthlyA.push((Array.isArray(ma)&&ma[i]!==null&&ma[i]!==undefined)?ma[i]:'');
+      }
+      return[k.id,pn,k.kpi_name,k.dept||'',k.unit,k.direction==='lower_better'?'낮을수록':'높을수록',k.target_value,k.alert_value,k.iatf_clause,k.frequency,k.description,k.is_active?'Y':'N',
+        ...monthlyT,...monthlyA];
     });
     const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
     XLSX.utils.book_append_sheet(wb,ws,'KPI마스터');
@@ -1767,11 +1998,13 @@ function exportExcel(mode){
     const rows=records.map(r=>{
       const k=kpis.find(x=>x.id===r.kpi_id);
       const pn=k?processes.find(p=>p.id===k.process_id)?.name||'':'';
-      const t=r.target_value!==null?r.target_value:(k?k.target_value:null);
+      // ★ 월별 목표 우선
+      const t=r.target_value!==null?r.target_value:(k?getMonthTarget(k,r.month):null);
+      const a=k?getMonthAlert(k,r.month):null;
       let pct='',j='';
       if(r.actual_value!==null&&t){
         pct=k&&k.direction==='lower_better'?(t!==0?(t/r.actual_value*100).toFixed(1):''):(r.actual_value/t*100).toFixed(1);
-        const jv=judge(r.actual_value,t,k?.alert_value,k?.direction);
+        const jv=judge(r.actual_value,t,a,k?.direction);
         j=jv==='ok'?'달성':jv==='ng'?'미달':'주의';
       }
       return[r.year,r.month,pn,k?.kpi_name||'',r.actual_value,t,pct?pct+'%':'',j,r.note||''];
