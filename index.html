@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -200,6 +201,79 @@ tr:hover td{background:#fafafa}
   </div>
 
   <div class="card">
+    <div class="card-tit">📧 부서별 메일알람</div>
+
+    <!-- 1) 발송 설정 -->
+    <details style="margin-bottom:10px">
+      <summary style="font-size:12px;font-weight:700;color:#0d47a1;cursor:pointer">⚙ 메일 발송 설정 (EmailJS)</summary>
+      <div style="padding:10px;background:#f8f9fb;border:1px solid #e3e8ef;border-radius:8px;margin-top:6px">
+        <div class="fg"><label>Service ID</label><input type="text" id="mailServiceId" placeholder="service_xxxxxxx"></div>
+        <div class="fg"><label>Template ID</label><input type="text" id="mailTemplateId" placeholder="template_xxxxxxx"></div>
+        <div class="fg"><label>Public Key</label><input type="text" id="mailPublicKey" placeholder="xxxxxxxxxxxxxxx"></div>
+        <div class="fg"><label>발신자 표기</label><input type="text" id="mailFromName" placeholder="㈜태진다이텍 품질관리팀"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          <button class="btn btn-sm btn-blue" onclick="saveMailCfg()">저장</button>
+          <button class="btn btn-sm btn-gray" onclick="openEmailJsSite()">🔗 EmailJS 열기</button>
+          <button class="btn btn-sm btn-gray" onclick="copyMailTemplate()">📋 템플릿 변수 복사</button>
+        </div>
+        <div style="margin-top:8px;padding:8px;background:#fff8e1;border:1px solid #ffe0b2;border-radius:6px;font-size:10px;color:#8d6e00;line-height:1.6">
+          <b>EmailJS 템플릿에 아래 변수를 넣어 주세요</b><br>
+          To Email: <code>{{to_email}}</code> · 제목: <code>{{subject}}</code><br>
+          본문: <code>{{to_name}}</code> <code>{{dept}}</code> <code>{{period}}</code> <code>{{summary}}</code> <code>{{message}}</code> <code>{{from_name}}</code><br>
+          ※ 본문 편집기에서 <b>HTML 모드</b>로 <code>{{{message}}}</code> 를 넣으면 표 형태로 예쁘게 옵니다.
+        </div>
+      </div>
+    </details>
+
+    <!-- 2) 부서별 수신자 -->
+    <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:6px">👤 부서별 수신자</div>
+    <div id="mailToList"></div>
+    <div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">
+      <select id="mailToDept" style="flex:1;min-width:110px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit"></select>
+      <input type="text" id="mailToName" placeholder="이름" style="flex:1;min-width:80px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
+      <input type="email" id="mailToEmail" placeholder="이메일" style="flex:2;min-width:150px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
+      <button class="btn btn-sm btn-blue" onclick="addMailTo()">추가</button>
+    </div>
+
+    <!-- 3) 발송 조건 -->
+    <div style="margin-top:12px;padding:10px;background:#f8f9fb;border:1px solid #e3e8ef;border-radius:8px">
+      <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:6px">🔔 알람 조건</div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="mailOptNg" checked> 미달(NG) 항목 알림
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="mailOptWarn" checked> 주의(WARN) 항목 알림
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="mailOptMiss" checked> 실적 미입력 항목 알림(입력 독촉)
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="mailOptSkipClean"> 이상 없는 부서는 발송 생략
+      </label>
+      <hr style="border:none;border-top:1px solid #e3e8ef;margin:8px 0">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
+        <input type="checkbox" id="mailOptOnSave"> 실적 저장 시 미달 발생하면 해당 부서에 즉시 발송
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap;cursor:pointer">
+        <input type="checkbox" id="mailOptAuto"> 매월
+        <input type="number" id="mailAutoDay" min="1" max="28" value="5" style="width:52px;padding:4px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
+        일 이후 첫 접속 시 <b>전월 실적</b> 자동 발송
+      </label>
+      <p style="font-size:10px;color:#999;margin-top:6px">※ 자동 발송은 이 앱을 연 브라우저에서 실행됩니다(월 1회, 중복 발송 방지). PC를 켜지 않으면 발송되지 않습니다.</p>
+      <button class="btn btn-sm btn-blue" onclick="saveMailCfg()" style="margin-top:8px">조건 저장</button>
+    </div>
+
+    <!-- 4) 수동 발송 -->
+    <div style="margin-top:12px;display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap">
+      <div class="fg" style="flex:1;min-width:90px;margin-bottom:0"><label>연도</label><select id="mailYear" style="font-size:13px"></select></div>
+      <div class="fg" style="flex:1;min-width:90px;margin-bottom:0"><label>월</label><select id="mailMonth" style="font-size:13px"></select></div>
+      <button class="btn btn-sm btn-gray" onclick="previewDeptMail()">👁 미리보기</button>
+      <button class="btn btn-sm btn-green" onclick="sendDeptMail()">📨 발송</button>
+    </div>
+    <div id="mailPreview" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
     <div class="card-tit">🏢 프로세스 관리</div>
     <div id="procList"></div>
     <div style="display:flex;gap:6px;margin-top:8px">
@@ -296,6 +370,16 @@ DROP POLICY IF EXISTS "kpi_record_all" ON kpi_record;
 CREATE POLICY "kpi_record_all" ON kpi_record FOR ALL USING (true) WITH CHECK (true);
 
 -- 시정조치
+-- 공통코드 (부서 / 메일알람 설정·수신자 저장용)
+CREATE TABLE IF NOT EXISTS common_code (
+  id SERIAL PRIMARY KEY,
+  code_group TEXT NOT NULL,
+  code_value TEXT NOT NULL,
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_common_code_group ON common_code(code_group);
+
 CREATE TABLE IF NOT EXISTS kpi_corrective_action (
   id SERIAL PRIMARY KEY,
   kpi_id INT REFERENCES kpi_master(id),
@@ -846,6 +930,7 @@ async function saveAllRecords(){
     showToast('✅ '+batch.length+'건 저장 완료');
     records=await sbSelect('kpi_record','order=year.desc,month.desc');
     loadRecKpis();
+    try{await mailOnRecordSave(y,m,batch.map(b=>b.kpi_id))}catch(e){console.error('메일 알람 실패:',e)}
   }catch(e){showToast('저장 실패: '+e.message)}
 }
 
@@ -1375,6 +1460,7 @@ function initSettingTab(){
   renderKpiFilterProc();
   renderKpiList();
   initHistMgr();
+  initMailTab();
 }
 
 // ===== 이력 관리 =====
@@ -1632,6 +1718,383 @@ function populateDeptSelect(selId,selectedVal){
   sel.innerHTML='<option value="">선택</option>';
   depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;sel.appendChild(o)});
   if(selectedVal)sel.value=selectedVal;
+}
+
+
+// ===== ★ 부서별 메일알람 (EmailJS) =====
+const MAIL_CFG_LS='KPI_MAIL_CFG', MAIL_TO_LS='KPI_MAIL_TO', MAIL_SENT_LS='KPI_MAIL_SENT';
+const MAIL_CFG_GROUP='kpi_mail_cfg', MAIL_TO_GROUP='kpi_mail_to';
+let mailCfg={serviceId:'',templateId:'',publicKey:'',fromName:'㈜태진다이텍 품질관리팀',
+  optNg:true,optWarn:true,optMiss:true,optSkipClean:false,optOnSave:false,optAuto:false,autoDay:5};
+let mailCfgRowId=null;
+let mailTo=[]; // {id,dept,name,email,active}
+
+// KPI의 담당 부서 (마스터의 dept 우선, 없으면 가이드 기본값)
+function kpiDept(k){
+  const g=KPI_GUIDE[k.kpi_name];
+  return (k.dept&&k.dept.trim())||(g&&g.dept)||'미지정';
+}
+
+// ---- 설정 로드/저장 ----
+async function loadMailCfg(){
+  let loaded=false;
+  try{
+    const rows=await sbSelect('common_code','code_group=eq.'+MAIL_CFG_GROUP+'&order=id&limit=1');
+    if(rows&&rows.length){
+      mailCfgRowId=rows[0].id;
+      Object.assign(mailCfg,JSON.parse(rows[0].code_value||'{}'));
+      loaded=true;
+    }
+  }catch(e){}
+  if(!loaded){
+    try{Object.assign(mailCfg,JSON.parse(localStorage.getItem(MAIL_CFG_LS)||'{}'))}catch(e){}
+  }
+}
+async function loadMailTo(){
+  let loaded=false;
+  try{
+    const rows=await sbSelect('common_code','code_group=eq.'+MAIL_TO_GROUP+'&order=sort_order,id');
+    mailTo=rows.map(r=>{
+      let o={};try{o=JSON.parse(r.code_value||'{}')}catch(e){}
+      return{id:r.id,dept:o.dept||'',name:o.name||'',email:o.email||'',active:o.active!==false};
+    });
+    loaded=true;
+  }catch(e){}
+  if(!loaded){
+    try{mailTo=JSON.parse(localStorage.getItem(MAIL_TO_LS)||'[]')}catch(e){mailTo=[]}
+  }
+}
+function readMailForm(){
+  const g=id=>document.getElementById(id);
+  if(g('mailServiceId'))mailCfg.serviceId=g('mailServiceId').value.trim();
+  if(g('mailTemplateId'))mailCfg.templateId=g('mailTemplateId').value.trim();
+  if(g('mailPublicKey'))mailCfg.publicKey=g('mailPublicKey').value.trim();
+  if(g('mailFromName'))mailCfg.fromName=g('mailFromName').value.trim()||'㈜태진다이텍 품질관리팀';
+  if(g('mailOptNg'))mailCfg.optNg=g('mailOptNg').checked;
+  if(g('mailOptWarn'))mailCfg.optWarn=g('mailOptWarn').checked;
+  if(g('mailOptMiss'))mailCfg.optMiss=g('mailOptMiss').checked;
+  if(g('mailOptSkipClean'))mailCfg.optSkipClean=g('mailOptSkipClean').checked;
+  if(g('mailOptOnSave'))mailCfg.optOnSave=g('mailOptOnSave').checked;
+  if(g('mailOptAuto'))mailCfg.optAuto=g('mailOptAuto').checked;
+  if(g('mailAutoDay'))mailCfg.autoDay=Math.min(28,Math.max(1,parseInt(g('mailAutoDay').value)||5));
+}
+async function saveMailCfg(){
+  readMailForm();
+  localStorage.setItem(MAIL_CFG_LS,JSON.stringify(mailCfg));
+  try{
+    const payload={code_group:MAIL_CFG_GROUP,code_value:JSON.stringify(mailCfg),sort_order:0};
+    if(mailCfgRowId)await sbUpdate('common_code',mailCfgRowId,{code_value:payload.code_value});
+    else{const r=await sbInsert('common_code',payload);if(r&&r[0])mailCfgRowId=r[0].id}
+    showToast('✅ 메일 설정 저장됨 (서버 공유)');
+  }catch(e){
+    showToast('⚠ 서버 저장 실패 — 이 PC에만 저장됨');
+  }
+}
+
+// ---- 수신자 관리 ----
+function renderMailToList(){
+  const c=document.getElementById('mailToList');
+  if(!c)return;
+  if(!mailTo.length){c.innerHTML='<div class="empty" style="padding:12px;font-size:12px">등록된 수신자가 없습니다</div>';return}
+  const byDept={};
+  mailTo.forEach(m=>{(byDept[m.dept||'미지정']=byDept[m.dept||'미지정']||[]).push(m)});
+  c.innerHTML=Object.keys(byDept).sort().map(d=>`
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:#0d47a1;background:#e3f2fd;padding:4px 8px;border-radius:5px">${d} <span style="color:#666;font-weight:400">(${byDept[d].length}명)</span></div>
+      ${byDept[d].map(m=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f0">
+        <input type="checkbox" ${m.active?'checked':''} onchange="toggleMailTo(${m.id},this.checked)" title="발송 대상">
+        <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>${m.name||'-'}</b> <span style="color:#666">${m.email}</span>
+        </span>
+        <button class="btn btn-sm btn-red" onclick="delMailTo(${m.id})">삭제</button>
+      </div>`).join('')}
+    </div>`).join('');
+}
+async function addMailTo(){
+  const dept=document.getElementById('mailToDept').value;
+  const name=document.getElementById('mailToName').value.trim();
+  const email=document.getElementById('mailToEmail').value.trim();
+  if(!dept){showToast('부서를 선택하세요');return}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showToast('이메일 형식을 확인하세요');return}
+  if(mailTo.some(m=>m.dept===dept&&m.email.toLowerCase()===email.toLowerCase())){showToast('이미 등록된 수신자');return}
+  const obj={dept,name,email,active:true};
+  try{
+    const r=await sbInsert('common_code',{code_group:MAIL_TO_GROUP,code_value:JSON.stringify(obj),sort_order:mailTo.length});
+    mailTo.push(Object.assign({id:r&&r[0]?r[0].id:Date.now()},obj));
+  }catch(e){
+    mailTo.push(Object.assign({id:Date.now()},obj));
+    localStorage.setItem(MAIL_TO_LS,JSON.stringify(mailTo));
+    showToast('⚠ 서버 저장 실패 — 이 PC에만 저장됨');
+  }
+  document.getElementById('mailToName').value='';
+  document.getElementById('mailToEmail').value='';
+  renderMailToList();
+  showToast('✅ 수신자 추가됨');
+}
+async function delMailTo(id){
+  const m=mailTo.find(x=>x.id===id);
+  if(!m)return;
+  if(!confirm((m.name||m.email)+' 수신자를 삭제하시겠습니까?'))return;
+  try{await sbDelete('common_code',id)}catch(e){}
+  mailTo=mailTo.filter(x=>x.id!==id);
+  localStorage.setItem(MAIL_TO_LS,JSON.stringify(mailTo));
+  renderMailToList();showToast('삭제됨');
+}
+async function toggleMailTo(id,on){
+  const m=mailTo.find(x=>x.id===id);
+  if(!m)return;
+  m.active=on;
+  try{await sbUpdate('common_code',id,{code_value:JSON.stringify({dept:m.dept,name:m.name,email:m.email,active:on})})}catch(e){}
+  localStorage.setItem(MAIL_TO_LS,JSON.stringify(mailTo));
+}
+
+// ---- 부서별 판정 결과 집계 ----
+function buildDeptAlert(year,month,dept){
+  const dKpis=kpis.filter(k=>k.is_active&&kpiDept(k)===dept);
+  const ng=[],warn=[],miss=[],ok=[];
+  dKpis.forEach(k=>{
+    const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===month);
+    const t=getMonthTarget(k,month),a=getMonthAlert(k,month);
+    const base={name:k.kpi_name,unit:k.unit||'',target:(t!=null?t:'—')};
+    if(!r||r.actual_value===null||r.actual_value===undefined){miss.push(base);return}
+    const pct=calcAchievement(r.actual_value,t,k.direction);
+    const item=Object.assign({},base,{val:r.actual_value,pct:(pct!==null&&isFinite(pct))?pct.toFixed(1)+'%':'—'});
+    const j=judge(r.actual_value,t,a,k.direction);
+    if(j==='ng')ng.push(item);else if(j==='warn')warn.push(item);else if(j==='ok')ok.push(item);
+  });
+  return{dept,total:dKpis.length,ng,warn,miss,ok};
+}
+function mailTargetDepts(){
+  const set=new Set(mailTo.filter(m=>m.active).map(m=>m.dept));
+  return [...set].filter(Boolean).sort();
+}
+
+// ---- 메일 본문 ----
+function buildMailBody(a,year,month){
+  const rowsHtml=(list,color,label,withVal)=>{
+    if(!list.length)return '';
+    let h=`<div style="margin:14px 0 6px;font-weight:700;color:${color}">${label} (${list.length}건)</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr style="background:#f2f5fa">
+        <th style="border:1px solid #dde3ec;padding:6px;text-align:left">KPI명</th>
+        <th style="border:1px solid #dde3ec;padding:6px">목표</th>
+        ${withVal?'<th style="border:1px solid #dde3ec;padding:6px">실적</th><th style="border:1px solid #dde3ec;padding:6px">달성률</th>':''}
+      </tr>`;
+    list.forEach(x=>{
+      h+=`<tr>
+        <td style="border:1px solid #dde3ec;padding:6px">${x.name}</td>
+        <td style="border:1px solid #dde3ec;padding:6px;text-align:center">${x.target} ${x.unit}</td>
+        ${withVal?`<td style="border:1px solid #dde3ec;padding:6px;text-align:center;font-weight:700;color:${color}">${x.val} ${x.unit}</td>
+        <td style="border:1px solid #dde3ec;padding:6px;text-align:center;font-weight:700;color:${color}">${x.pct}</td>`:''}
+      </tr>`;
+    });
+    return h+'</table>';
+  };
+  let html=`<div style="font-family:Malgun Gothic,sans-serif;color:#222;line-height:1.6">
+    <div style="background:#1E2761;color:#fff;padding:14px 16px;border-radius:8px 8px 0 0">
+      <div style="font-size:17px;font-weight:700">${year}년 ${month}월 KPI 실적 알림</div>
+      <div style="font-size:13px;opacity:.85;margin-top:3px">${a.dept} · ㈜태진다이텍</div>
+    </div>
+    <div style="border:1px solid #dde3ec;border-top:none;padding:16px;border-radius:0 0 8px 8px">
+      <div style="font-size:13px">
+        관리 KPI <b>${a.total}건</b> 중
+        <b style="color:#2e7d32">달성 ${a.ok.length}</b> ·
+        <b style="color:#c8871b">주의 ${a.warn.length}</b> ·
+        <b style="color:#c0392b">미달 ${a.ng.length}</b> ·
+        <b style="color:#666">미입력 ${a.miss.length}</b>
+      </div>`;
+  if(mailCfg.optNg)html+=rowsHtml(a.ng,'#c0392b','🔴 목표 미달 항목',true);
+  if(mailCfg.optWarn)html+=rowsHtml(a.warn,'#c8871b','🟡 주의 항목',true);
+  if(mailCfg.optMiss)html+=rowsHtml(a.miss,'#546e7a','⬜ 실적 미입력 항목',false);
+  if((mailCfg.optNg&&a.ng.length)||(mailCfg.optWarn&&a.warn.length)){
+    html+=`<div style="margin-top:14px;padding:10px;background:#fff8e1;border:1px solid #ffe0b2;border-radius:6px;font-size:12px;color:#8d6e00">
+      목표 미달 항목은 <b>원인 분석 및 시정조치</b>를 등록해 주시기 바랍니다.</div>`;
+  }
+  html+=`<div style="margin-top:16px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:8px">
+    본 메일은 KPI 관리 시스템에서 자동 발송되었습니다. · ${mailCfg.fromName}</div></div></div>`;
+
+  const summary=`달성 ${a.ok.length} / 주의 ${a.warn.length} / 미달 ${a.ng.length} / 미입력 ${a.miss.length}`;
+  return{html,summary};
+}
+
+// ---- 발송 ----
+function mailReady(){
+  return !!(mailCfg.serviceId&&mailCfg.templateId&&mailCfg.publicKey&&typeof emailjs!=='undefined');
+}
+async function sendOneMail(to,params){
+  return emailjs.send(mailCfg.serviceId,mailCfg.templateId,params,{publicKey:mailCfg.publicKey});
+}
+
+async function sendDeptMail(silent,forceYear,forceMonth){
+  readMailForm();
+  const year=forceYear!==undefined?forceYear:parseInt(document.getElementById('mailYear').value);
+  const month=forceMonth!==undefined?forceMonth:parseInt(document.getElementById('mailMonth').value);
+  if(!mailReady()){
+    if(!silent)alert('메일 발송 설정이 완료되지 않았습니다.\n\n[메일 발송 설정]에서 EmailJS의\nService ID / Template ID / Public Key 를 입력하고 저장하세요.');
+    return 0;
+  }
+  const depts=mailTargetDepts();
+  if(!depts.length){if(!silent)showToast('발송할 수신자가 없습니다');return 0}
+
+  const jobs=[];
+  depts.forEach(d=>{
+    const a=buildDeptAlert(year,month,d);
+    const issue=(mailCfg.optNg?a.ng.length:0)+(mailCfg.optWarn?a.warn.length:0)+(mailCfg.optMiss?a.miss.length:0);
+    if(mailCfg.optSkipClean&&issue===0)return;
+    if(a.total===0)return;
+    const{html,summary}=buildMailBody(a,year,month);
+    mailTo.filter(m=>m.active&&m.dept===d).forEach(m=>{
+      jobs.push({to:m,params:{
+        to_email:m.email,to_name:m.name||m.email,dept:d,
+        period:`${year}년 ${month}월`,year:String(year),month:String(month),
+        subject:`[KPI 알림] ${year}년 ${month}월 ${d} 실적 (미달 ${a.ng.length} / 주의 ${a.warn.length} / 미입력 ${a.miss.length})`,
+        summary:summary,message:html,from_name:mailCfg.fromName
+      }});
+    });
+  });
+  if(!jobs.length){if(!silent)showToast('발송 대상이 없습니다 (이상 없음)');return 0}
+  if(!silent&&!confirm(`${year}년 ${month}월 KPI 알람을 ${jobs.length}명에게 발송합니다.\n\n계속하시겠습니까?`))return 0;
+
+  let ok=0,fail=0;
+  for(const j of jobs){
+    try{await sendOneMail(j.to,j.params);ok++}
+    catch(e){fail++;console.error('메일 발송 실패:',j.to.email,e)}
+    await new Promise(r=>setTimeout(r,400)); // 발송 제한 회피
+  }
+  if(!silent)showToast(`📨 발송 완료: 성공 ${ok}건${fail?' / 실패 '+fail+'건':''}`);
+  return ok;
+}
+
+// ---- 미리보기 ----
+function previewDeptMail(){
+  readMailForm();
+  const year=parseInt(document.getElementById('mailYear').value);
+  const month=parseInt(document.getElementById('mailMonth').value);
+  const depts=mailTargetDepts();
+  const box=document.getElementById('mailPreview');
+  if(!depts.length){box.innerHTML='<div class="empty" style="font-size:12px;padding:10px">수신자를 먼저 등록하세요</div>';return}
+  let h='';
+  depts.forEach(d=>{
+    const a=buildDeptAlert(year,month,d);
+    const issue=(mailCfg.optNg?a.ng.length:0)+(mailCfg.optWarn?a.warn.length:0)+(mailCfg.optMiss?a.miss.length:0);
+    const skip=(mailCfg.optSkipClean&&issue===0)||a.total===0;
+    const rcv=mailTo.filter(m=>m.active&&m.dept===d);
+    h+=`<div style="border:1px solid ${skip?'#e0e0e0':'#bbdefb'};border-radius:8px;padding:10px;margin-bottom:8px;background:${skip?'#fafafa':'#fff'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
+        <b style="font-size:13px;color:#0d47a1">${d}</b>
+        <span style="font-size:11px;color:${skip?'#999':'#2e7d32'};font-weight:700">${skip?'발송 생략':'발송 대상 '+rcv.length+'명'}</span>
+      </div>
+      <div style="font-size:11px;color:#555;margin-top:4px">
+        KPI ${a.total}건 · <span style="color:#2e7d32">달성 ${a.ok.length}</span>
+        · <span style="color:#c8871b">주의 ${a.warn.length}</span>
+        · <span style="color:#c0392b">미달 ${a.ng.length}</span>
+        · <span style="color:#666">미입력 ${a.miss.length}</span>
+      </div>
+      ${a.ng.length?`<div style="font-size:11px;color:#c0392b;margin-top:4px">🔴 ${a.ng.map(x=>x.name).join(', ')}</div>`:''}
+      ${a.miss.length&&mailCfg.optMiss?`<div style="font-size:11px;color:#666;margin-top:2px">⬜ 미입력: ${a.miss.map(x=>x.name).join(', ')}</div>`:''}
+      <div style="font-size:10px;color:#999;margin-top:4px">${rcv.map(m=>(m.name||'')+'&lt;'+m.email+'&gt;').join(', ')||'수신자 없음'}</div>
+    </div>`;
+  });
+  box.innerHTML=h;
+}
+
+// ---- 실적 저장 시 즉시 알람 ----
+async function mailOnRecordSave(year,month,kpiIds){
+  if(!mailCfg.optOnSave||!mailReady())return;
+  const depts=new Set();
+  kpiIds.forEach(id=>{
+    const k=kpis.find(x=>x.id===id);
+    if(!k)return;
+    const r=records.find(x=>x.kpi_id===id&&x.year===year&&x.month===month);
+    if(!r||r.actual_value===null)return;
+    const t=getMonthTarget(k,month),a=getMonthAlert(k,month);
+    if(judge(r.actual_value,t,a,k.direction)==='ng')depts.add(kpiDept(k));
+  });
+  if(!depts.size)return;
+  const targets=mailTo.filter(m=>m.active&&depts.has(m.dept));
+  if(!targets.length)return;
+  let ok=0;
+  for(const d of depts){
+    const al=buildDeptAlert(year,month,d);
+    const{html,summary}=buildMailBody(al,year,month);
+    for(const m of mailTo.filter(x=>x.active&&x.dept===d)){
+      try{
+        await sendOneMail(m,{to_email:m.email,to_name:m.name||m.email,dept:d,
+          period:`${year}년 ${month}월`,year:String(year),month:String(month),
+          subject:`[KPI 미달 알림] ${year}년 ${month}월 ${d} — 미달 ${al.ng.length}건`,
+          summary:summary,message:html,from_name:mailCfg.fromName});
+        ok++;
+      }catch(e){console.error(e)}
+      await new Promise(r=>setTimeout(r,400));
+    }
+  }
+  if(ok)showToast(`📨 미달 알람 ${ok}건 발송됨`);
+}
+
+// ---- 월 1회 자동 발송 ----
+async function autoMonthlyMailCheck(){
+  if(!mailCfg.optAuto||!mailReady())return;
+  const now=new Date();
+  if(now.getDate()<(mailCfg.autoDay||5))return;
+  // 전월 대상
+  let y=now.getFullYear(),m=now.getMonth(); // getMonth()=0-based → 전월
+  if(m===0){y-=1;m=12}
+  const key=`${y}-${m}`;
+  if(localStorage.getItem(MAIL_SENT_LS)===key)return;
+  const sent=await sendDeptMail(true,y,m);
+  if(sent){
+    localStorage.setItem(MAIL_SENT_LS,key);
+    showToast(`📨 ${y}년 ${m}월 KPI 자동 알람 ${sent}건 발송됨`);
+  }
+}
+
+// ---- 유틸 ----
+function openEmailJsSite(){window.open('https://dashboard.emailjs.com/admin','_blank')}
+function copyMailTemplate(){
+  const t=`[EmailJS 템플릿 설정]
+To Email : {{to_email}}
+Subject  : {{subject}}
+From Name: {{from_name}}
+
+[본문 - HTML 모드에 붙여넣기]
+{{{message}}}
+
+[사용 가능 변수]
+{{to_name}} {{dept}} {{period}} {{year}} {{month}} {{summary}} {{message}} {{from_name}}`;
+  navigator.clipboard.writeText(t).then(()=>showToast('📋 템플릿 안내 복사됨')).catch(()=>alert(t));
+}
+
+// ---- 설정 화면 초기화 ----
+async function initMailTab(){
+  await loadMailCfg();
+  await loadMailTo();
+  const g=id=>document.getElementById(id);
+  if(g('mailServiceId'))g('mailServiceId').value=mailCfg.serviceId||'';
+  if(g('mailTemplateId'))g('mailTemplateId').value=mailCfg.templateId||'';
+  if(g('mailPublicKey'))g('mailPublicKey').value=mailCfg.publicKey||'';
+  if(g('mailFromName'))g('mailFromName').value=mailCfg.fromName||'';
+  if(g('mailOptNg'))g('mailOptNg').checked=mailCfg.optNg!==false;
+  if(g('mailOptWarn'))g('mailOptWarn').checked=mailCfg.optWarn!==false;
+  if(g('mailOptMiss'))g('mailOptMiss').checked=mailCfg.optMiss!==false;
+  if(g('mailOptSkipClean'))g('mailOptSkipClean').checked=!!mailCfg.optSkipClean;
+  if(g('mailOptOnSave'))g('mailOptOnSave').checked=!!mailCfg.optOnSave;
+  if(g('mailOptAuto'))g('mailOptAuto').checked=!!mailCfg.optAuto;
+  if(g('mailAutoDay'))g('mailAutoDay').value=mailCfg.autoDay||5;
+  populateDeptSelect('mailToDept','');
+  // 연/월 셀렉트
+  const now=new Date();
+  const yS=g('mailYear'),mS=g('mailMonth');
+  if(yS&&!yS.options.length){
+    for(let y=now.getFullYear()+1;y>=now.getFullYear()-3;y--){
+      const o=document.createElement('option');o.value=y;o.textContent=y+'년';yS.appendChild(o);
+    }
+    yS.value=now.getFullYear();
+  }
+  if(mS&&!mS.options.length){
+    for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=m;o.textContent=m+'월';mS.appendChild(o)}
+    mS.value=now.getMonth()||12; // 기본: 전월
+  }
+  renderMailToList();
 }
 
 // ===== ★ 월별 목표 컬럼 자동 적용/확인 =====
@@ -2897,6 +3360,7 @@ function exportPerfSummary(){
   if(getSbUrl()&&getSbKey()){
     await loadAll();
     renderDash();
+    try{await loadMailCfg();await loadMailTo();await autoMonthlyMailCheck()}catch(e){console.error('자동 메일알람 확인 실패:',e)}
   }else{
     document.getElementById('dashBody').innerHTML='<div class="empty">⚙ 설정 탭에서 Supabase 연결 정보를 입력하세요</div>';
   }
