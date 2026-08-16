@@ -204,23 +204,64 @@ tr:hover td{background:#fafafa}
     <div class="card-tit">📧 부서별 메일알람</div>
 
     <!-- 1) 발송 설정 -->
-    <details style="margin-bottom:10px">
-      <summary style="font-size:12px;font-weight:700;color:#0d47a1;cursor:pointer">⚙ 메일 발송 설정 (EmailJS)</summary>
+    <details style="margin-bottom:10px" open>
+      <summary style="font-size:12px;font-weight:700;color:#0d47a1;cursor:pointer">⚙ 메일 발송 설정</summary>
       <div style="padding:10px;background:#f8f9fb;border:1px solid #e3e8ef;border-radius:8px;margin-top:6px">
-        <div class="fg"><label>Service ID</label><input type="text" id="mailServiceId" placeholder="service_xxxxxxx"></div>
-        <div class="fg"><label>Template ID</label><input type="text" id="mailTemplateId" placeholder="template_xxxxxxx"></div>
-        <div class="fg"><label>Public Key</label><input type="text" id="mailPublicKey" placeholder="xxxxxxxxxxxxxxx"></div>
-        <div class="fg"><label>발신자 표기</label><input type="text" id="mailFromName" placeholder="㈜태진다이텍 품질관리팀"></div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-          <button class="btn btn-sm btn-blue" onclick="saveMailCfg()">저장</button>
-          <button class="btn btn-sm btn-gray" onclick="openEmailJsSite()">🔗 EmailJS 열기</button>
-          <button class="btn btn-sm btn-gray" onclick="copyMailTemplate()">📋 템플릿 변수 복사</button>
+
+        <div class="fg">
+          <label>발송 방식</label>
+          <select id="mailMethod" onchange="toggleMailMethod()" style="font-size:13px">
+            <option value="gas">Gmail 사용 (Google Apps Script) — 권장</option>
+            <option value="emailjs">EmailJS 사용</option>
+          </select>
         </div>
-        <div style="margin-top:8px;padding:8px;background:#fff8e1;border:1px solid #ffe0b2;border-radius:6px;font-size:10px;color:#8d6e00;line-height:1.6">
-          <b>EmailJS 템플릿에 아래 변수를 넣어 주세요</b><br>
-          To Email: <code>{{to_email}}</code> · 제목: <code>{{subject}}</code><br>
-          본문: <code>{{to_name}}</code> <code>{{dept}}</code> <code>{{period}}</code> <code>{{summary}}</code> <code>{{message}}</code> <code>{{from_name}}</code><br>
-          ※ 본문 편집기에서 <b>HTML 모드</b>로 <code>{{{message}}}</code> 를 넣으면 표 형태로 예쁘게 옵니다.
+
+        <!-- Gmail 방식 -->
+        <div id="mailGasBox">
+          <div class="fg"><label>Apps Script 웹앱 URL</label><input type="text" id="mailGasUrl" placeholder="https://script.google.com/macros/s/.../exec"></div>
+          <div class="fg"><label>보안 토큰</label><input type="text" id="mailGasToken" placeholder="taejin-kpi-2026"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <button class="btn btn-sm btn-gray" onclick="copyGasCode()">📋 Apps Script 코드 복사</button>
+            <button class="btn btn-sm btn-gray" onclick="openAppsScript()">🔗 Apps Script 열기</button>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:6px;font-size:10px;color:#2e7d32;line-height:1.7">
+            <b>설정 순서 (5분)</b><br>
+            ① <b>Apps Script 코드 복사</b> 누르기<br>
+            ② <b>Apps Script 열기</b> → 새 프로젝트 → 기존 내용 지우고 붙여넣기<br>
+            ③ 코드 위쪽 <code>TOKEN</code> 값을 정하고, 같은 값을 위 <b>보안 토큰</b> 칸에도 입력<br>
+            ④ 우측 상단 <b>배포 → 새 배포 → 웹 앱</b> / 실행: <b>나</b> / 액세스: <b>모든 사용자</b><br>
+            ⑤ 나온 URL을 위 <b>Apps Script 웹앱 URL</b> 칸에 붙여넣고 저장<br>
+            ※ 처음 배포 시 구글 권한 승인 화면이 뜨면 '고급' → '이동'을 눌러 허용하세요.<br>
+            ※ 무료 Gmail은 하루 100통, Workspace 계정은 1,500통까지 발송됩니다.
+          </div>
+        </div>
+
+        <!-- EmailJS 방식 -->
+        <div id="mailEjsBox" style="display:none">
+          <div class="fg"><label>Service ID</label><input type="text" id="mailServiceId" placeholder="service_xxxxxxx"></div>
+          <div class="fg"><label>Template ID</label><input type="text" id="mailTemplateId" placeholder="template_xxxxxxx"></div>
+          <div class="fg"><label>Public Key</label><input type="text" id="mailPublicKey" placeholder="xxxxxxxxxxxxxxx"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <button class="btn btn-sm btn-gray" onclick="openEmailJsSite()">🔗 EmailJS 열기</button>
+            <button class="btn btn-sm btn-gray" onclick="copyMailTemplate()">📋 템플릿 변수 복사</button>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:#fff8e1;border:1px solid #ffe0b2;border-radius:6px;font-size:10px;color:#8d6e00;line-height:1.6">
+            <b>EmailJS 템플릿에 아래 변수를 넣어 주세요</b><br>
+            To Email: <code>{{to_email}}</code> · 제목: <code>{{subject}}</code><br>
+            본문: <code>{{to_name}}</code> <code>{{dept}}</code> <code>{{period}}</code> <code>{{summary}}</code> <code>{{message}}</code> <code>{{from_name}}</code><br>
+            ※ 본문 편집기에서 <b>HTML 모드</b>로 <code>{{{message}}}</code> 를 넣으면 표 형태로 예쁘게 옵니다.
+          </div>
+        </div>
+
+        <div class="fg" style="margin-top:8px"><label>발신자 표기</label><input type="text" id="mailFromName" placeholder="㈜태진다이텍 품질관리팀"></div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          <button class="btn btn-sm btn-blue" onclick="saveMailCfg()">💾 설정 저장</button>
+        </div>
+
+        <div style="display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;align-items:center">
+          <input type="email" id="mailTestAddr" placeholder="테스트 받을 이메일" style="flex:2;min-width:150px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
+          <button class="btn btn-sm btn-green" onclick="sendTestMail()">✉ 테스트 발송</button>
         </div>
       </div>
     </details>
@@ -1721,10 +1762,79 @@ function populateDeptSelect(selId,selectedVal){
 }
 
 
-// ===== ★ 부서별 메일알람 (EmailJS) =====
+const GAS_RELAY_CODE=`/**
+ * KPI 부서별 메일알람 - Gmail 발송 중계기
+ * ㈜태진다이텍 품질관리팀
+ *
+ * 사용법
+ *  1) script.google.com 접속 → 새 프로젝트
+ *  2) 이 코드를 전부 붙여넣기
+ *  3) 아래 TOKEN 값을 원하는 암호로 바꾸기 (KPI 웹앱에도 같은 값 입력)
+ *  4) 배포 → 새 배포 → 유형: 웹 앱
+ *       실행 계정 : 나
+ *       액세스 권한: 모든 사용자
+ *  5) 생성된 웹 앱 URL을 KPI 웹앱 설정에 붙여넣기
+ */
+
+// ★ 아무 문자열이나 정하세요. KPI 웹앱 설정의 '보안 토큰'과 반드시 같아야 합니다.
+const TOKEN = 'taejin-kpi-2026';
+
+function doPost(e) {
+  try {
+    const d = JSON.parse(e.postData.contents);
+
+    if (TOKEN && d.token !== TOKEN) {
+      return out({ ok: false, error: '보안 토큰이 일치하지 않습니다' });
+    }
+    if (!d.to || !d.subject) {
+      return out({ ok: false, error: '수신자 또는 제목이 없습니다' });
+    }
+
+    MailApp.sendEmail({
+      to: d.to,
+      subject: d.subject,
+      htmlBody: d.html || '',
+      body: String(d.html || '').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim(),
+      name: d.fromName || 'KPI 알림'
+    });
+
+    return out({ ok: true, remaining: MailApp.getRemainingDailyQuota() });
+  } catch (err) {
+    return out({ ok: false, error: String(err) });
+  }
+}
+
+// 브라우저로 URL을 열었을 때 동작 확인용
+function doGet() {
+  return out({
+    ok: true,
+    msg: 'KPI 메일 중계기가 정상 동작 중입니다',
+    remaining: MailApp.getRemainingDailyQuota()
+  });
+}
+
+function out(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// 에디터에서 직접 실행해 권한 승인 + 발송 테스트를 할 때 사용
+function 테스트발송() {
+  MailApp.sendEmail({
+    to: Session.getActiveUser().getEmail(),
+    subject: '[테스트] KPI 메일 중계기 정상',
+    htmlBody: '<b>연결 성공</b><br>이 메일이 보이면 설정이 완료된 것입니다.',
+    name: 'KPI 알림'
+  });
+  Logger.log('발송 완료 / 남은 일일 할당량: ' + MailApp.getRemainingDailyQuota());
+}
+`;
+
+// ===== ★ 부서별 메일알람 (Gmail / EmailJS) =====
 const MAIL_CFG_LS='KPI_MAIL_CFG', MAIL_TO_LS='KPI_MAIL_TO', MAIL_SENT_LS='KPI_MAIL_SENT';
 const MAIL_CFG_GROUP='kpi_mail_cfg', MAIL_TO_GROUP='kpi_mail_to';
-let mailCfg={serviceId:'',templateId:'',publicKey:'',fromName:'㈜태진다이텍 품질관리팀',
+let mailCfg={method:'gas',gasUrl:'',gasToken:'',serviceId:'',templateId:'',publicKey:'',fromName:'㈜태진다이텍 품질관리팀',
   optNg:true,optWarn:true,optMiss:true,optSkipClean:false,optOnSave:false,optAuto:false,autoDay:5};
 let mailCfgRowId=null;
 let mailTo=[]; // {id,dept,name,email,active}
@@ -1766,6 +1876,9 @@ async function loadMailTo(){
 }
 function readMailForm(){
   const g=id=>document.getElementById(id);
+  if(g('mailMethod'))mailCfg.method=g('mailMethod').value;
+  if(g('mailGasUrl'))mailCfg.gasUrl=g('mailGasUrl').value.trim();
+  if(g('mailGasToken'))mailCfg.gasToken=g('mailGasToken').value.trim();
   if(g('mailServiceId'))mailCfg.serviceId=g('mailServiceId').value.trim();
   if(g('mailTemplateId'))mailCfg.templateId=g('mailTemplateId').value.trim();
   if(g('mailPublicKey'))mailCfg.publicKey=g('mailPublicKey').value.trim();
@@ -1918,11 +2031,79 @@ function buildMailBody(a,year,month){
 }
 
 // ---- 발송 ----
+function mailMethod(){
+  if(mailCfg.method)return mailCfg.method;
+  return (mailCfg.serviceId&&mailCfg.publicKey)?'emailjs':'gas';
+}
 function mailReady(){
+  if(mailMethod()==='gas')return !!(mailCfg.gasUrl&&/^https:\/\/script\.google\.com\//.test(mailCfg.gasUrl));
   return !!(mailCfg.serviceId&&mailCfg.templateId&&mailCfg.publicKey&&typeof emailjs!=='undefined');
 }
+function mailNotReadyMsg(){
+  return mailMethod()==='gas'
+    ? '메일 발송 설정이 완료되지 않았습니다.\n\n[메일 발송 설정]에서 Apps Script 웹앱 URL을 입력하고 저장하세요.\n(설정 순서는 같은 화면의 초록색 안내 참고)'
+    : '메일 발송 설정이 완료되지 않았습니다.\n\n[메일 발송 설정]에서 EmailJS의\nService ID / Template ID / Public Key 를 입력하고 저장하세요.';
+}
 async function sendOneMail(to,params){
+  if(mailMethod()==='gas'){
+    // Content-Type을 text/plain으로 보내야 사전요청(preflight) 없이 통과됩니다
+    const r=await fetch(mailCfg.gasUrl,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        token:mailCfg.gasToken||'',
+        to:params.to_email,
+        subject:params.subject,
+        html:params.message,
+        fromName:params.from_name||mailCfg.fromName
+      })
+    });
+    if(!r.ok)throw new Error('Apps Script 응답 오류 (HTTP '+r.status+')');
+    let j;
+    try{j=JSON.parse(await r.text())}catch(e){throw new Error('Apps Script 응답을 해석할 수 없습니다. 배포 시 액세스 권한을 "모든 사용자"로 했는지 확인하세요.')}
+    if(!j.ok)throw new Error(j.error||'발송 실패');
+    return j;
+  }
   return emailjs.send(mailCfg.serviceId,mailCfg.templateId,params,{publicKey:mailCfg.publicKey});
+}
+
+// 테스트 발송
+async function sendTestMail(){
+  readMailForm();
+  const to=document.getElementById('mailTestAddr').value.trim();
+  if(!to||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)){showToast('테스트 받을 이메일을 입력하세요');return}
+  if(!mailReady()){alert(mailNotReadyMsg());return}
+  showToast('발송 중...');
+  try{
+    const r=await sendOneMail({email:to},{
+      to_email:to,to_name:'테스트',dept:'테스트',
+      period:'테스트',year:'',month:'',summary:'연결 테스트',
+      subject:'[KPI 알림] 메일 연결 테스트',
+      message:'<div style="font-family:Malgun Gothic,sans-serif"><h3 style="color:#1E2761">연결 성공</h3><p>이 메일이 보이면 KPI 메일알람 설정이 정상입니다.</p><p style="font-size:12px;color:#888">'+(mailCfg.fromName||'㈜태진다이텍 품질관리팀')+'</p></div>',
+      from_name:mailCfg.fromName
+    });
+    const left=(r&&r.remaining!==undefined)?' (오늘 남은 발송 가능 수: '+r.remaining+'통)':'';
+    showToast('✅ 테스트 메일 발송됨'+left);
+  }catch(e){
+    alert('테스트 발송 실패\n\n'+e.message);
+  }
+}
+
+function toggleMailMethod(){
+  const m=document.getElementById('mailMethod').value;
+  const gas=document.getElementById('mailGasBox'),ejs=document.getElementById('mailEjsBox');
+  if(gas)gas.style.display=(m==='gas')?'':'none';
+  if(ejs)ejs.style.display=(m==='emailjs')?'':'none';
+}
+function openAppsScript(){window.open('https://script.google.com/home/projects/create','_blank')}
+function copyGasCode(){
+  const code=GAS_RELAY_CODE.replace('taejin-kpi-2026',(document.getElementById('mailGasToken').value.trim()||'taejin-kpi-2026'));
+  navigator.clipboard.writeText(code)
+    .then(()=>showToast('📋 Apps Script 코드가 복사되었습니다'))
+    .catch(()=>{
+      const w=window.open('','_blank');
+      w.document.write('<pre style="white-space:pre-wrap;font-size:12px">'+code.replace(/</g,'&lt;')+'</pre>');
+    });
 }
 
 async function sendDeptMail(silent,forceYear,forceMonth){
@@ -1930,7 +2111,7 @@ async function sendDeptMail(silent,forceYear,forceMonth){
   const year=forceYear!==undefined?forceYear:parseInt(document.getElementById('mailYear').value);
   const month=forceMonth!==undefined?forceMonth:parseInt(document.getElementById('mailMonth').value);
   if(!mailReady()){
-    if(!silent)alert('메일 발송 설정이 완료되지 않았습니다.\n\n[메일 발송 설정]에서 EmailJS의\nService ID / Template ID / Public Key 를 입력하고 저장하세요.');
+    if(!silent)alert(mailNotReadyMsg());
     return 0;
   }
   const depts=mailTargetDepts();
@@ -2069,6 +2250,10 @@ async function initMailTab(){
   await loadMailCfg();
   await loadMailTo();
   const g=id=>document.getElementById(id);
+  if(g('mailMethod')){g('mailMethod').value=mailMethod();}
+  if(g('mailGasUrl'))g('mailGasUrl').value=mailCfg.gasUrl||'';
+  if(g('mailGasToken'))g('mailGasToken').value=mailCfg.gasToken||'';
+  toggleMailMethod();
   if(g('mailServiceId'))g('mailServiceId').value=mailCfg.serviceId||'';
   if(g('mailTemplateId'))g('mailTemplateId').value=mailCfg.templateId||'';
   if(g('mailPublicKey'))g('mailPublicKey').value=mailCfg.publicKey||'';
