@@ -8,6 +8,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -425,6 +427,7 @@ CREATE POLICY "kpi_ca_all" ON kpi_corrective_action FOR ALL USING (true) WITH CH
       </select>
       <button onclick="printPerfReport()" style="padding:8px 14px;background:#ffc107;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px">🖨 인쇄</button>
       <button onclick="downloadPerfPDF()" id="pdfDownloadBtn" style="padding:8px 14px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px">💾 PDF 다운로드</button>
+      <button onclick="downloadPerfPPT()" id="pptDownloadBtn" style="padding:8px 14px;background:#d84315;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px">📊 PPT 다운로드</button>
       <button onclick="closePerfReport()" style="padding:8px 14px;background:#c62828;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px">✕ 닫기</button>
     </div>
   </div>
@@ -2583,6 +2586,259 @@ async function downloadPerfPDF(){
   }catch(e){
     console.error(e);
     alert('PDF 생성 실패:\n'+e.message+'\n\n페이지가 너무 많거나 데이터가 큰 경우 발생할 수 있습니다.\n프로세스를 하나만 선택해서 다시 시도해보세요.');
+    btn.innerHTML=oldText;
+    btn.disabled=false;
+  }
+}
+
+
+// ===== ★ PPT 다운로드 (편집 가능 · 표=차트데이터 연동) =====
+// 차트에 내장 데이터표(showDataTable)를 사용 → PPT에서 [데이터 편집] 시 표와 그래프가 함께 갱신됨
+const PPT_NAVY='1E2761', PPT_NAVY2='2E4374', PPT_ICE='CADCFC';
+const PPT_GREEN='2E7D32', PPT_RED='C0392B', PPT_AMBER='C8871B';
+const PPT_GRAY='5A6472', PPT_LINE='D6DCE5', PPT_FONT='Arial';
+const PPT_PAL=['2D6CDF','C0392B','2E7D32','E08A1E','7B4EA8','00A0A0','8C6D46','6B7280','D14B8F','1B5E20','FF6F00','283593'];
+
+// 차트 XML에서 (셀주소 → 값) 맵 추출
+function pptChartCellMap(xml){
+  const cells={};
+  const sers=xml.split('<c:ser>').slice(1);
+  sers.forEach(ser=>{
+    const vi=ser.indexOf('<c:val>');
+    if(vi<0)return;
+    const block=ser.slice(vi);
+    const fm=block.match(/<c:f>Sheet1!\$([A-Z]+)\$\d+:\$[A-Z]+\$\d+<\/c:f>/);
+    if(!fm)return;
+    const col=fm[1];
+    const re=/<c:pt idx="(\d+)"><c:v>([^<]*)<\/c:v><\/c:pt>/g;
+    let m;
+    while((m=re.exec(block))!==null){
+      cells[col+(parseInt(m[1])+2)]=m[2].trim();
+    }
+  });
+  return cells;
+}
+
+// pptxgenjs 결함 보정: (1) 내장 엑셀에 값 0이 빈칸으로 저장되는 문제 복구
+//                      (2) 미입력 월이 NaN/0으로 표시되지 않도록 빈 데이터포인트 제거 + gap 처리
+async function pptPatchZip(arrayBuffer){
+  if(typeof JSZip==='undefined')return new Blob([arrayBuffer],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+  const zip=await JSZip.loadAsync(arrayBuffer);
+  const chartFiles=Object.keys(zip.files).filter(n=>/^ppt\/charts\/chart\d+\.xml$/.test(n));
+  for(const cf of chartFiles){
+    let xml=await zip.file(cf).async('string');
+    const cells=pptChartCellMap(xml);
+    xml=xml.replace(/<c:pt idx="\d+"><c:v><\/c:v><\/c:pt>/g,'')
+           .replace(/<c:dispBlanksAs val="span"\/>/g,'<c:dispBlanksAs val="gap"/>');
+    zip.file(cf,xml);
+    const relName='ppt/charts/_rels/'+cf.split('/').pop()+'.rels';
+    const relFile=zip.file(relName);
+    if(!relFile)continue;
+    const rel=await relFile.async('string');
+    const m=rel.match(/Target="\.\.\/embeddings\/([^"]+)"/);
+    if(!m)continue;
+    const xlsxName='ppt/embeddings/'+m[1];
+    const xf=zip.file(xlsxName);
+    if(!xf)continue;
+    try{
+      const inner=await JSZip.loadAsync(await xf.async('arraybuffer'));
+      const sheetPath='xl/worksheets/sheet1.xml';
+      const sf=inner.file(sheetPath);
+      if(!sf)continue;
+      let sxml=await sf.async('string');
+      sxml=sxml.replace(/<c r="([A-Z]+\d+)"([^>\/]*)><v><\/v><\/c>/g,(mm,ref,attr)=>{
+        const v=cells[ref];
+        return (v===undefined||v==='')?`<c r="${ref}"${attr}/>`:`<c r="${ref}"${attr}><v>${v}</v></c>`;
+      });
+      inner.file(sheetPath,sxml);
+      const newXlsx=await inner.generateAsync({type:'uint8array',compression:'DEFLATE'});
+      zip.file(xlsxName,newXlsx);
+    }catch(e){console.warn('내장 엑셀 보정 건너뜀:',xlsxName,e)}
+  }
+  return await zip.generateAsync({
+    type:'blob',
+    mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    compression:'DEFLATE'
+  });
+}
+
+async function downloadPerfPPT(){
+  if(typeof PptxGenJS==='undefined'){
+    alert('PPT 라이브러리 로딩 실패. 인터넷 연결을 확인하고 새로고침해주세요.');
+    return;
+  }
+  const btn=document.getElementById('pptDownloadBtn');
+  const oldText=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='⏳ PPT 생성 중...';
+
+  try{
+    const year=parseInt(document.getElementById('perfReportYear').value);
+    const procFilter=document.getElementById('perfReportProc').value;
+    const procName=procFilter
+      ?(processes.find(p=>p.id===parseInt(procFilter))?.name||'')+'_'
+      :'전체_';
+    const targetProcs=procFilter
+      ?processes.filter(p=>p.id===parseInt(procFilter))
+      :processes.filter(p=>kpis.some(k=>k.process_id===p.id&&k.is_active));
+    if(!targetProcs.length){showToast('출력할 프로세스가 없습니다');btn.innerHTML=oldText;btn.disabled=false;return}
+
+    const MONTHS=[];for(let m=1;m<=12;m++)MONTHS.push(m+'월');
+
+    // KPI별 월 실적/평균/달성률 계산
+    const calcRow=(k)=>{
+      const vals=[];let sum=0,cnt=0,tSum=0,tCnt=0;
+      for(let m=1;m<=12;m++){
+        const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);
+        const v=(r&&r.actual_value!==null&&r.actual_value!==undefined)?r.actual_value:null;
+        vals.push(v);
+        if(v!==null){sum+=v;cnt++}
+        const t=getMonthTarget(k,m);
+        if(t!=null){tSum+=t;tCnt++}
+      }
+      const avg=cnt?(sum/cnt):null;
+      const avgT=tCnt?(tSum/tCnt):null;
+      const pct=(avg!==null&&avgT!=null)?calcAchievement(avg,avgT,k.direction):null;
+      return{
+        name:k.kpi_name,
+        unit:k.unit||'',
+        target:hasMonthlyTargets(k)?'월별':((k.target_value!==null&&k.target_value!==undefined)?String(k.target_value):'—'),
+        values:vals,
+        hasData:cnt>0,
+        avg:avg!==null?avg.toFixed(1):'—',
+        rate:(pct!==null&&isFinite(pct))?pct.toFixed(1)+'%':'—'
+      };
+    };
+
+    const pres=new PptxGenJS();
+    pres.layout='LAYOUT_WIDE'; // 13.3 x 7.5
+    pres.author='㈜태진다이텍 품질관리팀';
+    pres.title=`${year}년 KPI 실적 종합 보고서`;
+
+    // ===== 전체 요약 집계 =====
+    let totalKpi=0,totalOk=0,totalNg=0,totalWarn=0;
+    const procStats=[];
+    targetProcs.forEach(p=>{
+      const pKpis=kpis.filter(k=>k.process_id===p.id&&k.is_active);
+      let pOk=0,pNg=0;
+      pKpis.forEach(k=>{
+        for(let m=1;m<=12;m++){
+          const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);
+          if(!r||r.actual_value===null||r.actual_value===undefined)continue;
+          totalKpi++;
+          const t=getMonthTarget(k,m),a=getMonthAlert(k,m);
+          if(t==null)continue;
+          const j=judge(r.actual_value,t,a,k.direction);
+          if(j==='ok'){totalOk++;pOk++}
+          else if(j==='ng'){totalNg++;pNg++}
+          else if(j==='warn')totalWarn++;
+        }
+      });
+      procStats.push({p,cnt:pKpis.length,ok:pOk,ng:pNg});
+    });
+
+    // ===== 표지 슬라이드 =====
+    {
+      const s=pres.addSlide();
+      s.background={color:PPT_NAVY};
+      s.addText(`${year}년 KPI 실적 종합 보고서`,{x:0.7,y:0.5,w:11.9,h:0.8,fontSize:38,bold:true,color:'FFFFFF',fontFace:PPT_FONT});
+      s.addText(`출력일 ${new Date().toLocaleDateString('ko-KR')}   ·   ㈜태진다이텍 품질관리팀`,{x:0.7,y:1.28,w:11.9,h:0.35,fontSize:13.5,color:PPT_ICE,fontFace:PPT_FONT});
+      const st=[[String(totalOk),'달성','6FCF97'],[String(totalWarn),'주의','F2C94C'],[String(totalNg),'미달','EB6B6B'],[String(totalKpi),'전체 측정',PPT_ICE]];
+      st.forEach((v,i)=>{
+        const x=0.7+i*3.05;
+        s.addShape(pres.ShapeType.roundRect,{x:x,y:1.9,w:2.75,h:1.45,rectRadius:0.08,fill:{color:'FFFFFF',transparency:88},line:{color:'FFFFFF',transparency:70,width:1}});
+        s.addText(v[0],{x:x,y:2.03,w:2.75,h:0.78,fontSize:42,bold:true,color:v[2],align:'center',fontFace:PPT_FONT});
+        s.addText(v[1],{x:x,y:2.82,w:2.75,h:0.35,fontSize:13,color:'FFFFFF',align:'center',fontFace:PPT_FONT});
+      });
+      s.addText(`프로세스별 요약 (${targetProcs.length}개 프로세스)`,{x:0.7,y:3.65,w:6,h:0.35,fontSize:15,bold:true,color:PPT_ICE,fontFace:PPT_FONT});
+      const hdr=['No','프로세스','KPI 수','달성','미달'];
+      const tbl=[hdr.map(t=>({text:t,options:{bold:true,color:PPT_NAVY,fill:{color:PPT_ICE},align:'center',fontSize:12}}))];
+      procStats.forEach((ps,i)=>{
+        tbl.push([
+          {text:String(i+1),options:{align:'center',fontSize:12,fill:{color:'FFFFFF'},color:'1F2937'}},
+          {text:ps.p.name,options:{align:'left',fontSize:12,fill:{color:'FFFFFF'},color:'1F2937'}},
+          {text:String(ps.cnt),options:{align:'center',fontSize:12,fill:{color:'FFFFFF'},color:'1F2937'}},
+          {text:String(ps.ok),options:{align:'center',bold:true,fontSize:12,fill:{color:'FFFFFF'},color:PPT_GREEN}},
+          {text:String(ps.ng),options:{align:'center',bold:true,fontSize:12,fill:{color:'FFFFFF'},color:PPT_RED}}
+        ]);
+      });
+      s.addTable(tbl,{x:0.7,y:4.1,w:11.9,colW:[0.9,5.0,2.0,2.0,2.0],rowH:0.38,fontFace:PPT_FONT,valign:'middle',border:{type:'solid',pt:0.5,color:PPT_ICE}});
+      s.addText('각 프로세스 슬라이드의 차트를 우클릭 → [데이터 편집]에서 월별 실적을 수정하면 표와 그래프가 함께 갱신됩니다.',
+        {x:0.7,y:6.65,w:11.9,h:0.3,fontSize:11,color:PPT_ICE,italic:true,fontFace:PPT_FONT});
+    }
+
+    // ===== 프로세스별 슬라이드 =====
+    targetProcs.forEach((p,pIdx)=>{
+      const pKpis=kpis.filter(k=>k.process_id===p.id&&k.is_active);
+      if(!pKpis.length)return;
+      const rows=pKpis.map(calcRow);
+      const s=pres.addSlide();
+
+      s.addText(p.name,{x:0.55,y:0.28,w:8.5,h:0.52,fontSize:28,bold:true,color:PPT_NAVY,fontFace:PPT_FONT});
+      s.addText(`${year}년 · ${pIdx+1}/${targetProcs.length}`,{x:9.5,y:0.38,w:3.25,h:0.35,fontSize:12,color:PPT_GRAY,align:'right',fontFace:PPT_FONT});
+      s.addShape(pres.ShapeType.rect,{x:0.55,y:0.85,w:12.2,h:0.02,fill:{color:PPT_LINE}});
+
+      // 실적이 하나도 없는 KPI는 차트 시리즈에서 제외(표시 오류 방지), 요약표에는 유지
+      const chartRows=rows.filter(r=>r.hasData);
+      const n=chartRows.length;
+      const chartH=n>=7?4.75:4.3;
+      const dtFont=n>=9?7.5:(n>=7?8:9);
+
+      if(n){
+        s.addChart(pres.ChartType.line,
+          chartRows.map(r=>({name:r.name,labels:MONTHS,values:r.values})),
+          {
+            x:0.4,y:0.95,w:12.5,h:chartH,
+            chartColors:PPT_PAL,
+            lineSize:1.9,lineDataSymbolSize:4,
+            showLegend:false,
+            showTitle:true,title:`${p.name} KPI 월별 추이`,titleFontSize:11,titleColor:PPT_NAVY,titleFontFace:PPT_FONT,
+            catAxisLabelColor:PPT_GRAY,valAxisLabelColor:PPT_GRAY,catAxisLabelFontSize:9,valAxisLabelFontSize:9,
+            valGridLine:{color:'EEF1F5',size:1},catGridLine:{style:'none'},
+            showDataTable:true,showDataTableKeys:true,showDataTableHorzBorder:true,
+            showDataTableVertBorder:true,showDataTableOutline:true,dataTableFontSize:dtFont
+          });
+      }else{
+        s.addText('해당 연도에 입력된 실적 데이터가 없습니다.',{x:0.55,y:2.5,w:12.2,h:0.5,fontSize:14,color:PPT_GRAY,align:'center',fontFace:PPT_FONT});
+      }
+
+      // 목표 / 평균 / 달성률 요약 스트립
+      const stripY=n?(0.95+chartH+0.15):3.4;
+      const cols=rows.length;
+      const w0=1.05, cw=(12.2-w0)/cols;
+      const fs=cols>=9?7:(cols>=6?8:9);
+      const mk=(t,o)=>({text:t,options:Object.assign({align:'center',fontSize:fs},o||{})});
+      const body=[
+        [mk('구분',{bold:true,color:'FFFFFF',fill:{color:PPT_NAVY2},align:'left'}),...rows.map(r=>mk(r.name,{bold:true,color:'FFFFFF',fill:{color:PPT_NAVY2}}))],
+        [mk('목표',{bold:true,color:PPT_NAVY,fill:{color:'EEF3FB'},align:'left'}),...rows.map(r=>mk(r.target,{color:PPT_RED,bold:true}))],
+        [mk('평균',{bold:true,color:PPT_NAVY,fill:{color:'EEF3FB'},align:'left'}),...rows.map(r=>mk(r.avg,{color:'1F2937'}))],
+        [mk('달성률',{bold:true,color:PPT_NAVY,fill:{color:'EEF3FB'},align:'left'}),...rows.map(r=>{
+          const v=parseFloat(r.rate);
+          const c=isNaN(v)?PPT_GRAY:(v>=100?PPT_GREEN:(v>=85?PPT_AMBER:PPT_RED));
+          return mk(r.rate,{color:c,bold:true});
+        })]
+      ];
+      s.addTable(body,{x:0.55,y:stripY,w:12.2,colW:[w0].concat(Array(cols).fill(cw)),rowH:0.235,fontFace:PPT_FONT,valign:'middle',border:{type:'solid',pt:0.5,color:PPT_LINE}});
+      s.addText('↑ 목표·평균·달성률은 요약값입니다(수동 갱신). 월별 실적은 위 차트의 [데이터 편집]에서 수정하세요.',
+        {x:0.55,y:stripY+0.235*4+0.08,w:12.2,h:0.25,fontSize:8.5,color:PPT_GRAY,italic:true,fontFace:PPT_FONT});
+    });
+
+    // 생성 → 보정 → 다운로드
+    const buf=await pres.write({outputType:'arraybuffer'});
+    const blob=await pptPatchZip(buf);
+    const today=new Date().toISOString().split('T')[0].replace(/-/g,'');
+    const filename=`KPI실적보고서_${year}년_${procName}${today}.pptx`;
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},1000);
+
+    btn.innerHTML='✅ 다운로드 완료';
+    setTimeout(()=>{btn.innerHTML=oldText;btn.disabled=false},1500);
+    showToast('✅ PPT 파일 다운로드됨: '+filename);
+  }catch(e){
+    console.error(e);
+    alert('PPT 생성 실패:\n'+e.message);
     btn.innerHTML=oldText;
     btn.disabled=false;
   }
