@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0055)https://kimsanggi85-del.github.io/ESG_KIP-Team-process/ -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>IATF 16949 KPI 관리</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="./IATF 16949 KPI 관리_files/xlsx.full.min.js.다운로드"></script>
+<script src="./IATF 16949 KPI 관리_files/chart.umd.min.js.다운로드"></script>
+<script src="./IATF 16949 KPI 관리_files/html2canvas.min.js.다운로드"></script>
+<script src="./IATF 16949 KPI 관리_files/jspdf.umd.min.js.다운로드"></script>
+<script src="./IATF 16949 KPI 관리_files/pptxgen.bundle.js.다운로드"></script>
+<script src="./IATF 16949 KPI 관리_files/jszip.min.js.다운로드"></script>
+<script src="./IATF 16949 KPI 관리_files/email.min.js.다운로드"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -74,12 +74,254 @@ tr:hover td{background:#fafafa}
     <div class="card-tit" style="justify-content:space-between">
       <span>📊 KPI 현황 대시보드</span>
       <div>
-        <select id="dashYear" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"></select>
-        <select id="dashMonth" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"></select>
+        <select id="dashYear" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"><option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option><option value="2023">2023년</option></select>
+        <select id="dashMonth" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
       </div>
     </div>
-    <div id="dashSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"></div>
-    <div id="dashBody"></div>
+    <div id="dashSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><div style="flex:1;text-align:center;padding:8px;background:#e8f5e9;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#2e7d32">0</div><div style="font-size:10px;color:#2e7d32">달성</div></div><div style="flex:1;text-align:center;padding:8px;background:#fff8e1;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#f57f17">0</div><div style="font-size:10px;color:#f57f17">주의</div></div><div style="flex:1;text-align:center;padding:8px;background:#ffebee;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#c62828">0</div><div style="font-size:10px;color:#c62828">미달</div></div><div style="flex:1;text-align:center;padding:8px;background:#f5f5f5;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#999">22</div><div style="font-size:10px;color:#999">미입력</div></div></div>
+    <div id="dashBody"><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 품질관리</div><div onclick="openDetailPopup(250)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">사내공정불량률(SKF SBC)</div>
+          <div style="font-size:10px;color:#888">8.5.1 · PPM · 목표:2000</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(251)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">사내공정불량률(SKF 씰)</div>
+          <div style="font-size:10px;color:#888">8.5.1 · PPM · 목표:600</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(252)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">사내공정불량률(세동산업)</div>
+          <div style="font-size:10px;color:#888">8.5.1 · PPM · 목표:300</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(253)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">사내공정불량률(일진)</div>
+          <div style="font-size:10px;color:#888">8.5.1 · PPM · 목표:1000</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(254)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">사내공정불량률(진양오일씰)</div>
+          <div style="font-size:10px;color:#888">8.5.1 · PPM · 목표:1000</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(255)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">수입검사 불량률(정민스틸)</div>
+          <div style="font-size:10px;color:#888">8.4.2 · PPM · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(256)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">수입검사 불량률(태경스틸)</div>
+          <div style="font-size:10px;color:#888">8.4.2 · PPM · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(257)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">수입검사 불량률(동일스테인레스)</div>
+          <div style="font-size:10px;color:#888">8.4.2 · PPM · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(258)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">Q-cost 비용</div>
+          <div style="font-size:10px;color:#888">10.2 · 만원 · 목표:367</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div></div><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 생산관리</div><div onclick="openDetailPopup(259)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">생산계획 대비 실적 달성률</div>
+          <div style="font-size:10px;color:#888">8.5.1 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(260)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">설비 가동률</div>
+          <div style="font-size:10px;color:#888">8.5.1.5 · % · 목표:80</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(261)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">효율</div>
+          <div style="font-size:10px;color:#888">8.5.1.5 · % · 목표:80</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(262)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">예방보전 준수</div>
+          <div style="font-size:10px;color:#888">8.5.1.5 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(263)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">MTTR 달성률</div>
+          <div style="font-size:10px;color:#888">8.5.1.5 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div></div><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 개발관리</div><div onclick="openDetailPopup(264)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">개발수주 달성률</div>
+          <div style="font-size:10px;color:#888">8.3 · 건 · 목표:1</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(265)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">개발완료 달성률</div>
+          <div style="font-size:10px;color:#888">8.3 · 건 · 목표:1</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div></div><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 영업관리</div><div onclick="openDetailPopup(266)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">매출달성률</div>
+          <div style="font-size:10px;color:#888">9.1 · 백만원 · 목표:1352</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(267)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">고객사 납기준수율</div>
+          <div style="font-size:10px;color:#888">8.5.4 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(268)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">고객사 추가운행건수</div>
+          <div style="font-size:10px;color:#888">9.1.2 · 건 · 목표:10</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(269)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">무재해 사업장 실천</div>
+          <div style="font-size:10px;color:#888">6.1 · 건 · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div></div><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 구매자재</div><div onclick="openDetailPopup(270)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">협력사 납기율</div>
+          <div style="font-size:10px;color:#888">8.4.2.4 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(271)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">협력사 추가운송 발생건수</div>
+          <div style="font-size:10px;color:#888">8.4.2.4 · 건 · 목표:60</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div></div></div>
   </div>
 </div>
 
@@ -148,10 +390,10 @@ tr:hover td{background:#fafafa}
   <div class="card">
     <div class="card-tit">📥 엑셀 다운로드</div>
     <div class="btn-row">
-      <button class="btn btn-sm btn-gray" onclick="exportExcel('kpi')">KPI마스터</button>
-      <button class="btn btn-sm btn-gray" onclick="exportExcel('record')">실적데이터</button>
-      <button class="btn btn-sm btn-gray" onclick="exportExcel('ca')">시정조치</button>
-      <button class="btn btn-sm btn-gray" onclick="exportExcel('all')">전체</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel(&#39;kpi&#39;)">KPI마스터</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel(&#39;record&#39;)">실적데이터</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel(&#39;ca&#39;)">시정조치</button>
+      <button class="btn btn-sm btn-gray" onclick="exportExcel(&#39;all&#39;)">전체</button>
     </div>
     <div style="margin-top:8px">
       <button class="btn btn-sm" style="width:100%;padding:10px;font-size:13px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="exportPerfSummary()">📊 일괄 실적 다운로드 (엑셀)</button>
@@ -204,7 +446,7 @@ tr:hover td{background:#fafafa}
     <div class="card-tit">📧 부서별 메일알람</div>
 
     <!-- 1) 발송 설정 -->
-    <details style="margin-bottom:10px" open>
+    <details style="margin-bottom:10px" open="">
       <summary style="font-size:12px;font-weight:700;color:#0d47a1;cursor:pointer">⚙ 메일 발송 설정</summary>
       <div style="padding:10px;background:#f8f9fb;border:1px solid #e3e8ef;border-radius:8px;margin-top:6px">
 
@@ -280,13 +522,13 @@ tr:hover td{background:#fafafa}
     <div style="margin-top:12px;padding:10px;background:#f8f9fb;border:1px solid #e3e8ef;border-radius:8px">
       <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:6px">🔔 알람 조건</div>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
-        <input type="checkbox" id="mailOptNg" checked> 미달(NG) 항목 알림
+        <input type="checkbox" id="mailOptNg" checked=""> 미달(NG) 항목 알림
       </label>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
-        <input type="checkbox" id="mailOptWarn" checked> 주의(WARN) 항목 알림
+        <input type="checkbox" id="mailOptWarn" checked=""> 주의(WARN) 항목 알림
       </label>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
-        <input type="checkbox" id="mailOptMiss" checked> 실적 미입력 항목 알림(입력 독촉)
+        <input type="checkbox" id="mailOptMiss" checked=""> 실적 미입력 항목 알림(입력 독촉)
       </label>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:6px;cursor:pointer">
         <input type="checkbox" id="mailOptSkipClean"> 이상 없는 부서는 발송 생략
@@ -341,6 +583,14 @@ tr:hover td{background:#fafafa}
       <button class="btn btn-sm btn-gray" onclick="initDefaultKpis()">📋 기본 KPI 일괄등록</button>
       <p style="font-size:10px;color:#999;margin-top:4px">* Supabase 테이블 생성 후 사용 (SQL 아래 참조)</p>
     </div>
+    <div style="margin-top:8px;padding:10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;font-size:11px;color:#1b5e20">
+      <b>🌱 환경·안전보건 KPI 추가 (ISO 14001 / 45001)</b><br>
+      <span style="font-size:10px;color:#2e7d32">기존 데이터는 그대로 두고 「환경안전보건」 프로세스와 KPI 13개만 추가합니다. 담당부서 : 영업관리팀</span>
+      <div style="margin-top:6px">
+        <button class="btn btn-sm" style="background:#2e7d32;color:#fff;font-size:11px" onclick="addEhsKpis()">➕ 환경·안전보건 KPI 13개 추가 / 갱신</button>
+      </div>
+      <p style="font-size:10px;color:#558b2f;margin-top:4px">* 여러 번 눌러도 중복되지 않습니다. 이미 등록된 항목은 담당부서·조항만 갱신되고 목표값·실적은 유지됩니다.</p>
+    </div>
     <div style="margin-top:8px;padding:10px;background:#fff3e0;border:1px solid #ffcc80;border-radius:6px;font-size:11px;color:#e65100">
       <b>⚠ 월별 목표 기능 사용 시 (1회만 실행)</b><br>
       <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
@@ -353,8 +603,7 @@ tr:hover td{background:#fafafa}
     </div>
     <details style="margin-top:10px">
       <summary style="font-size:12px;font-weight:600;color:#0d47a1;cursor:pointer">📄 Supabase SQL (테이블 생성)</summary>
-      <pre style="font-size:10px;background:#f5f5f5;padding:10px;border-radius:8px;overflow-x:auto;margin-top:6px;white-space:pre-wrap">
--- 프로세스 마스터
+      <pre style="font-size:10px;background:#f5f5f5;padding:10px;border-radius:8px;overflow-x:auto;margin-top:6px;white-space:pre-wrap">-- 프로세스 마스터
 CREATE TABLE IF NOT EXISTS kpi_process (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
@@ -627,9 +876,23 @@ const KPI_GUIDE={
   '매출달성율':{clause:'9.1 모니터링, 측정, 분석 및 평가',dept:'영업팀',method:'매출 목표 대비 실적 달성률.\n\n산출식: (매출실적 / 매출계획) × 100\n\n근거자료: 영업계획, 영업실적 보고서'},
   '고객사 납기준수율':{clause:'8.5.4 보전과 보존',dept:'영업팀',method:'고객사 요구 납기 대비 준수율.\n\n산출식: (입고수량 / 발주수량) × 100\n\n근거자료: 입고실적보고서'},
   '고객사 추가운행건수':{clause:'9.1.2 고객만족',dept:'영업팀',method:'고객사 긴급요청 등으로 발생한 추가 운행 건수.\n\n산출식: 월간 추가운행 발생 건수\n\n근거자료: 운송 기록, 추가운행 발생 대장'},
-  '무재해 사업장 실천':{clause:'6.1 리스크 및 기회를 다루는 조치',dept:'관리팀',method:'산업재해 사고 발생 건수 관리.\n\n산출식: (산재사고발생건수 / 목표건수) × 100\n\n근거자료: 재해발생 보고서, 안전사고 대장'},
+  '무재해 사업장 실천':{clause:'45001 6.2 안전보건목표 / IATF 6.1 리스크 및 기회',dept:'영업관리팀',method:'산업재해 사고 발생 건수 관리. (기존 IATF 지표를 환경안전보건 프로세스로 승계)\n\n산출식: 월간 산업재해 발생 건수 (목표 0건)\n\n근거자료: 재해발생 보고서, 안전사고 대장, 산업재해조사표'},
   '협력사 납기율':{clause:'8.4.2.4 공급자 모니터링',dept:'자재팀',method:'협력사 납기 준수율.\n\n산출식: (입고수량 / 발주수량) × 100\n\n근거자료: 협력사 입고실적보고서'},
-  '협력사 추가운송 발생건수':{clause:'8.4.2.4 공급자 모니터링',dept:'자재팀',method:'협력사 귀책으로 발생한 추가 운송 건수.\n\n산출식: 월간 추가운송 발생 건수\n\n근거자료: 운송 기록, 추가운송 발생 대장'}
+  '협력사 추가운송 발생건수':{clause:'8.4.2.4 공급자 모니터링',dept:'자재팀',method:'협력사 귀책으로 발생한 추가 운송 건수.\n\n산출식: 월간 추가운송 발생 건수\n\n근거자료: 운송 기록, 추가운송 발생 대장'},
+
+  /* ===== 환경·안전보건 (ISO 14001 / ISO 45001) ===== */
+  '중대재해 발생 건수':{clause:'45001 6.2 / 산업안전보건법·중대재해처벌법',dept:'영업관리팀',method:'사망 또는 중대재해 발생 건수 관리.\n\n산출식: 월간 중대재해 발생 건수 (목표 0건)\n\n판정기준: 1건이라도 발생 시 즉시 시정조치 및 경영검토 보고\n\n근거자료: 산업재해조사표, 재해발생 보고서, 근로복지공단 승인 내역'},
+  '휴업재해 발생 건수':{clause:'45001 6.2 / 10.2 사건·부적합 및 시정조치',dept:'영업관리팀',method:'휴업 1일 이상을 수반한 업무상 재해 발생 건수.\n\n산출식: 월간 휴업재해 발생 건수 (목표 0건)\n\n판정기준: 발생 시 재해조사 → 근본원인 분석 → 표준 개정 → 수평전개\n\n근거자료: 산업재해조사표, 재해조사 보고서, 요양급여 신청서'},
+  '아차사고 발굴 건수':{clause:'45001 10.2 / 5.4 근로자 협의 및 참여',dept:'영업관리팀',method:'무재해 아차사고(Near Miss) 발굴 및 조치 건수. 많이 발굴할수록 좋은 지표.\n\n산출식: 월간 아차사고 접수 건수 (목표 월 1건 이상)\n\n운영방법: 신고 포상제 운영, 조회·TBM 시 전파\n\n근거자료: 아차사고 관리대장, 포상 지급 내역'},
+  '위험성평가 실시율':{clause:'45001 6.1.2 위험요인 파악 및 리스크 평가',dept:'영업관리팀',method:'계획된 위험성평가의 실시율. 신규 공정·설비·4M 변경 시 수시 평가 포함.\n\n산출식: (평가 실시 건수 / 평가 계획 건수) × 100\n\n실시기준: 정기 연 1회 + 신규·변경 시 수시\n해당 공정 작업자 직접 참여 필수 (45001 5.4)\n\n근거자료: 위험성평가표(작업자 서명본), 위험성평가 계획서'},
+  '법정 안전보건교육 이수율':{clause:'45001 7.2 적격성 / 산업안전보건법 제29조',dept:'영업관리팀',method:'법정 안전보건교육(정기·채용시·작업내용 변경시·특별교육) 이수율.\n\n산출식: (교육 이수 인원 / 교육 대상 인원) × 100\n\n법정기준: 사무직 매반기 6h, 현장직 매반기 12h, 관리감독자 연 16h\n\n근거자료: 교육 실시 결과보고서, 참석자 서명부, 교육일지'},
+  '안전점검 지적사항 개선율':{clause:'45001 9.1.1 / 10.2 시정조치',dept:'영업관리팀',method:'순회점검·합동점검·행정기관 점검에서 지적된 사항의 기한 내 개선율.\n\n산출식: (기한내 개선완료 건수 / 지적 건수) × 100\n\n점검종류: 일상순회, 산업안전보건위원회 합동점검, 지도점검\n\n근거자료: 안전점검 체크시트, 개선 전·후 사진, 조치결과 보고서'},
+  '환경법규 위반 건수':{clause:'14001 9.1.2 / 45001 9.1.2 준수평가',dept:'영업관리팀',method:'환경 관련 법규 위반에 따른 행정처분·과태료·개선명령 발생 건수.\n\n산출식: 월간 위반 건수 (목표 0건)\n\n대상법규: 대기환경보전법, 물환경보전법, 폐기물관리법, 화학물질관리법, 소음·진동관리법\n\n근거자료: 법규 준수평가표, 행정처분 이력, 인허가 대장'},
+  '환경사고 발생 건수':{clause:'14001 8.2 비상사태 대비 및 대응',dept:'영업관리팀',method:'유해화학물질 유출·누출, 유압유 누유, 폐기물 무단투기 등 환경사고 발생 건수.\n\n산출식: 월간 환경사고 발생 건수 (목표 0건)\n\n판정기준: 사업장 외부 유출 또는 신고대상 사고는 즉시 경영검토 보고\n\n근거자료: 환경사고 발생대장, 사고조사 보고서'},
+  '전력 사용량 원단위 절감률':{clause:'14001 9.1.1 모니터링·측정 / Amd 1:2024 기후변화',dept:'영업관리팀',method:'생산량 대비 전력 사용 원단위의 전년 동월 대비 절감률.\n\n산출식: (1 - 당월원단위 / 전년동월원단위) × 100\n원단위 = 전력사용량(kWh) / 생산수량(천개)\n\n절감활동: LED 교체, 공회전 프레스 정지, 고효율 전동기·인버터 적용\n\n근거자료: 전력 사용실적 집계표, 한전 청구서, 생산일보'},
+  '폐기물 재활용률':{clause:'14001 6.1.2 환경측면 / 8.1 운용기획 및 관리',dept:'영업관리팀',method:'전체 폐기물 중 재활용(재자원화)되는 비율. 프레스 스크랩 포함.\n\n산출식: (재활용 위탁량 / 전체 폐기물 발생량) × 100\n\n구분: 스크랩(재활용) / 폐유(재생) / 지정폐기물(소각·매립)\n\n근거자료: 폐기물 인계서, 올바로시스템 실적, 스크랩 매각 내역'},
+  '준수평가 적합률':{clause:'14001 9.1.2 / 45001 9.1.2 준수평가',dept:'영업관리팀',method:'준수의무(법규) 평가 대상 항목 중 적합 판정 비율. 심사 시 확인 빈도 최상위 지표.\n\n산출식: (적합 항목수 / 평가 대상 항목수) × 100\n\n실시주기: 연 1회 정기 (필요 시 법규 개정 시 수시)\n\n근거자료: 법규 준수평가표, 법규관리대장, 인허가 대장'},
+  '비상사태 모의훈련 실시율':{clause:'14001 8.2 / 45001 8.2 비상사태 대비 및 대응',dept:'영업관리팀',method:'연간 계획된 비상사태 대응 훈련의 실시율.\n\n산출식: (훈련 실시 횟수 / 훈련 계획 횟수) × 100\n\n훈련종류: 화재 대피·초기진화, 유해화학물질 누출 대응, 프레스 협착 응급조치\n훈련 후 도출된 개선사항은 반드시 조치 및 기록\n\n근거자료: 모의훈련 계획서, 모의훈련 결과보고서, 훈련 사진, 비상사태 조직도'}
 };
 
 function openDetailPopup(kpiId){
@@ -1711,7 +1974,7 @@ function histExcel(){
 }
 
 // ===== 부서 관리 (Supabase common_code: kpi_dept) =====
-const DEFAULT_DEPTS=['품질관리팀','영업관리팀','생산팀','개발팀'];
+const DEFAULT_DEPTS=['품질관리팀','영업관리팀','생산팀','개발팀','자재팀'];
 let cachedDepts=[];
 
 async function loadDepts(){
@@ -2620,6 +2883,113 @@ async function delKpi(id){
   }catch(e){showToast('삭제 실패: '+e.message)}
 }
 
+// ===== 환경·안전보건 KPI 추가 (기존 데이터 보존) =====
+const EHS_KPIS=[
+  {name:'무재해 사업장 실천',unit:'건',dir:'lower_better',target:0,alert:1,clause:'45001 6.2 / IATF 6.1',desc:'산업재해 사고 발생 건수',dept:'영업관리팀'},
+  {name:'중대재해 발생 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'45001 6.2',desc:'사망 또는 중대재해 발생 건수 (목표 0건)',dept:'영업관리팀'},
+  {name:'휴업재해 발생 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'45001 10.2',desc:'휴업 1일 이상 업무상 재해 발생 건수',dept:'영업관리팀'},
+  {name:'아차사고 발굴 건수',unit:'건',dir:'higher_better',target:1,alert:0,clause:'45001 10.2',desc:'무재해 아차사고 발굴 건수 (월 1건 이상)',dept:'영업관리팀'},
+  {name:'위험성평가 실시율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'45001 6.1.2',desc:'계획 대비 위험성평가 실시율',dept:'영업관리팀'},
+  {name:'법정 안전보건교육 이수율',unit:'%',dir:'higher_better',target:100,alert:95,clause:'45001 7.2',desc:'법정 안전보건교육 이수율',dept:'영업관리팀'},
+  {name:'안전점검 지적사항 개선율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'45001 9.1.1',desc:'안전점검 지적사항 기한내 개선율',dept:'영업관리팀'},
+  {name:'환경법규 위반 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'14001 9.1.2',desc:'환경법규 위반 행정처분·과태료 건수',dept:'영업관리팀'},
+  {name:'환경사고 발생 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'14001 8.2',desc:'유출·누출 등 환경사고 발생 건수',dept:'영업관리팀'},
+  {name:'전력 사용량 원단위 절감률',unit:'%',dir:'higher_better',target:3,alert:1,clause:'14001 9.1.1',desc:'생산량 대비 전력 원단위 전년比 절감률',dept:'영업관리팀'},
+  {name:'폐기물 재활용률',unit:'%',dir:'higher_better',target:95,alert:90,clause:'14001 6.1.2',desc:'전체 폐기물 중 재활용 비율',dept:'영업관리팀'},
+  {name:'준수평가 적합률',unit:'%',dir:'higher_better',target:100,alert:95,clause:'14001/45001 9.1.2',desc:'준수의무 평가 항목 중 적합 비율',dept:'영업관리팀'},
+  {name:'비상사태 모의훈련 실시율',unit:'%',dir:'higher_better',target:100,alert:100,clause:'14001/45001 8.2',desc:'연간 계획 대비 모의훈련 실시율',dept:'영업관리팀'}
+];
+
+async function addEhsKpis(){
+  if(!getSbUrl()||!getSbKey()){alert('Supabase URL과 Key를 먼저 입력하고 저장하세요.');return}
+  if(!confirm('「환경안전보건」 프로세스와 KPI 13개를 추가합니다.\n\n· 기존 데이터는 삭제되지 않습니다.\n· 이미 등록된 항목은 담당부서·조항 정보만 최신값으로 갱신됩니다.\n  (목표값 및 입력된 실적은 그대로 유지)\n\n진행하시겠습니까?'))return;
+
+  const hdr={'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation'};
+  let addCnt=0,skipCnt=0,updCnt=0,errCnt=0,errLog=[];
+
+  try{
+    await loadAll();
+
+    // Step 1 : 프로세스 확보 (없으면 생성)
+    let proc=processes.find(p=>p.name==='환경안전보건');
+    if(!proc){
+      const r=await fetch(getSbUrl()+'/rest/v1/kpi_process',{
+        method:'POST',
+        headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=representation,resolution=merge-duplicates'},
+        body:JSON.stringify({name:'환경안전보건',sort_order:processes.length})
+      });
+      const txt=await r.text();
+      if(!r.ok){alert('프로세스 생성 실패:\n'+txt);return}
+      const arr=JSON.parse(txt);
+      proc=Array.isArray(arr)?arr[0]:arr;
+      if(!proc||!proc.id){alert('프로세스 응답에 id 없음:\n'+txt);return}
+      processes.push(proc);
+      showToast('「환경안전보건」 프로세스 생성됨');
+    }
+
+    // Step 2 : KPI 등록 (동일 이름 존재 시 담당부서·조항만 갱신)
+    for(const k of EHS_KPIS){
+      const exist=kpis.find(x=>x.kpi_name===k.name);
+      if(exist){
+        // 이미 등록된 항목은 담당부서 / 조항 정보만 최신값으로 갱신 (목표값·실적은 보존)
+        try{
+          const patch={dept:k.dept,iatf_clause:k.clause};
+          let pr=await fetch(getSbUrl()+'/rest/v1/kpi_master?id=eq.'+exist.id,{
+            method:'PATCH',
+            headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=minimal'},
+            body:JSON.stringify(patch)
+          });
+          if(!pr.ok){
+            const t=await pr.text();
+            if(t.includes('dept')){
+              pr=await fetch(getSbUrl()+'/rest/v1/kpi_master?id=eq.'+exist.id,{
+                method:'PATCH',
+                headers:{'apikey':getSbKey(),'Authorization':'Bearer '+getSbKey(),'Content-Type':'application/json','Prefer':'return=minimal'},
+                body:JSON.stringify({iatf_clause:k.clause})
+              });
+            }
+          }
+          updCnt++;
+        }catch(e){errLog.push('[갱신:'+k.name+'] '+e.message);errCnt++}
+        continue;
+      }
+      try{
+        const payload={
+          process_id:proc.id,kpi_name:k.name,unit:k.unit,direction:k.dir,dept:k.dept||'',
+          target_value:k.target,alert_value:k.alert,iatf_clause:k.clause,
+          description:k.desc,frequency:'monthly',sort_order:0
+        };
+        let r=await fetch(getSbUrl()+'/rest/v1/kpi_master',{method:'POST',headers:hdr,body:JSON.stringify(payload)});
+        // dept 컬럼이 없는 구버전 스키마 대응
+        if(!r.ok){
+          const txt=await r.text();
+          if(txt.includes('dept')){
+            delete payload.dept;
+            r=await fetch(getSbUrl()+'/rest/v1/kpi_master',{method:'POST',headers:hdr,body:JSON.stringify(payload)});
+            if(!r.ok){const t2=await r.text();errLog.push('[KPI:'+k.name+'] '+t2);errCnt++;continue}
+          }else{errLog.push('[KPI:'+k.name+'] '+txt);errCnt++;continue}
+        }
+        const arr=await r.json();
+        if(Array.isArray(arr))kpis.push(...arr);
+        addCnt++;
+      }catch(e){errLog.push('[KPI:'+k.name+'] '+e.message);errCnt++}
+    }
+
+    await loadAll();
+    renderProcList&&renderProcList();
+    renderKpiFilterProc&&renderKpiFilterProc();
+    renderKpiList&&renderKpiList();
+
+    let msg='✅ 환경·안전보건 KPI 처리 완료\n\n';
+    msg+='· 신규 등록 : '+addCnt+'건\n';
+    if(updCnt)  msg+='· 기존 항목 갱신(담당부서·조항) : '+updCnt+'건\n';
+    if(skipCnt) msg+='· 건너뜀 : '+skipCnt+'건\n';
+    if(errCnt)  msg+='· 실패 : '+errCnt+'건\n\n'+errLog.slice(0,5).join('\n');
+    msg+='\n\n[KPI 관리] → 프로세스 필터에서 「환경안전보건」을 선택하면 확인됩니다.';
+    alert(msg);
+  }catch(e){alert('추가 실패:\n'+e.message)}
+}
+
 // ===== 기본 KPI 일괄등록 =====
 async function initDefaultKpis(){
   if(!getSbUrl()||!getSbKey()){alert('Supabase URL과 Key를 먼저 입력하고 저장하세요.');return}
@@ -2673,12 +3043,26 @@ async function initDefaultKpis(){
     {proc:'영업관리',kpis:[
       {name:'매출달성율',unit:'백만원',dir:'higher_better',target:15685,alert:14000,clause:'9.1',desc:'매출 목표 대비 실적 달성률',dept:'영업팀'},
       {name:'고객사 납기준수율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'8.5.4',desc:'고객사 요구 납기 대비 준수율',dept:'영업팀'},
-      {name:'고객사 추가운행건수',unit:'건',dir:'lower_better',target:60,alert:70,clause:'9.1.2',desc:'고객사 추가운행 발생 건수',dept:'영업팀'},
-      {name:'무재해 사업장 실천',unit:'건',dir:'lower_better',target:0,alert:1,clause:'6.1',desc:'산업재해 사고 발생 건수',dept:'관리팀'}
+      {name:'고객사 추가운행건수',unit:'건',dir:'lower_better',target:60,alert:70,clause:'9.1.2',desc:'고객사 추가운행 발생 건수',dept:'영업팀'}
     ]},
     {proc:'구매자재',kpis:[
       {name:'협력사 납기율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'8.4.2.4',desc:'협력사 납기 준수율',dept:'자재팀'},
       {name:'협력사 추가운송 발생건수',unit:'건',dir:'lower_better',target:60,alert:70,clause:'8.4.2.4',desc:'협력사 추가 운송 발생 건수',dept:'자재팀'}
+    ]},
+    {proc:'환경안전보건',kpis:[
+      {name:'무재해 사업장 실천',unit:'건',dir:'lower_better',target:0,alert:1,clause:'45001 6.2 / IATF 6.1',desc:'산업재해 사고 발생 건수 (기존 지표 승계)',dept:'영업관리팀'},
+      {name:'중대재해 발생 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'45001 6.2',desc:'사망 또는 중대재해 발생 건수 (목표 0건)',dept:'영업관리팀'},
+      {name:'휴업재해 발생 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'45001 10.2',desc:'휴업 1일 이상 업무상 재해 발생 건수',dept:'영업관리팀'},
+      {name:'아차사고 발굴 건수',unit:'건',dir:'higher_better',target:1,alert:0,clause:'45001 10.2',desc:'무재해 아차사고 발굴 건수 (월 1건 이상)',dept:'영업관리팀'},
+      {name:'위험성평가 실시율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'45001 6.1.2',desc:'계획 대비 위험성평가 실시율',dept:'영업관리팀'},
+      {name:'법정 안전보건교육 이수율',unit:'%',dir:'higher_better',target:100,alert:95,clause:'45001 7.2',desc:'법정 안전보건교육 이수율',dept:'영업관리팀'},
+      {name:'안전점검 지적사항 개선율',unit:'%',dir:'higher_better',target:100,alert:90,clause:'45001 9.1.1',desc:'안전점검 지적사항 기한내 개선율',dept:'영업관리팀'},
+      {name:'환경법규 위반 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'14001 9.1.2',desc:'환경법규 위반 행정처분·과태료 건수',dept:'영업관리팀'},
+      {name:'환경사고 발생 건수',unit:'건',dir:'lower_better',target:0,alert:1,clause:'14001 8.2',desc:'유출·누출 등 환경사고 발생 건수',dept:'영업관리팀'},
+      {name:'전력 사용량 원단위 절감률',unit:'%',dir:'higher_better',target:3,alert:1,clause:'14001 9.1.1',desc:'생산량 대비 전력 원단위 전년比 절감률',dept:'영업관리팀'},
+      {name:'폐기물 재활용률',unit:'%',dir:'higher_better',target:95,alert:90,clause:'14001 6.1.2',desc:'전체 폐기물 중 재활용 비율',dept:'영업관리팀'},
+      {name:'준수평가 적합률',unit:'%',dir:'higher_better',target:100,alert:95,clause:'14001/45001 9.1.2',desc:'준수의무 평가 항목 중 적합 비율',dept:'영업관리팀'},
+      {name:'비상사태 모의훈련 실시율',unit:'%',dir:'higher_better',target:100,alert:100,clause:'14001/45001 8.2',desc:'연간 계획 대비 모의훈련 실시율',dept:'영업관리팀'}
     ]}
   ];
 
@@ -3551,5 +3935,6 @@ function exportPerfSummary(){
   }
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
