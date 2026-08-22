@@ -61,15 +61,15 @@ tr:hover td{background:#fafafa}
   <p>제품설계 제외 · 프로세스별 성과지표 등록 · 실적관리 · 추이분석 <span style="opacity:.7;font-size:10px;margin-left:4px">build 2026-05-06</span></p>
 </div>
 <div class="tabs">
-  <div class="tab on" onclick="swTab(0)">📊 현황</div>
+  <div class="tab" onclick="swTab(0)">📊 현황</div>
   <div class="tab" onclick="swTab(1)">📝 실적</div>
   <div class="tab" onclick="swTab(2)">🔧 시정</div>
-  <div class="tab" onclick="swTab(3)">📈 추이</div>
+  <div class="tab on" onclick="swTab(3)">📈 추이</div>
   <div class="tab" onclick="swTab(4)">⚙ 설정</div>
 </div>
 
 <!-- ===== 현황 대시보드 ===== -->
-<div class="pnl on" id="pnl0">
+<div class="pnl" id="pnl0">
   <div class="card">
     <div class="card-tit" style="justify-content:space-between">
       <span>📊 KPI 현황 대시보드</span>
@@ -78,7 +78,7 @@ tr:hover td{background:#fafafa}
         <select id="dashMonth" onchange="renderDash()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select>
       </div>
     </div>
-    <div id="dashSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><div style="flex:1;text-align:center;padding:8px;background:#e8f5e9;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#2e7d32">0</div><div style="font-size:10px;color:#2e7d32">달성</div></div><div style="flex:1;text-align:center;padding:8px;background:#fff8e1;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#f57f17">0</div><div style="font-size:10px;color:#f57f17">주의</div></div><div style="flex:1;text-align:center;padding:8px;background:#ffebee;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#c62828">0</div><div style="font-size:10px;color:#c62828">미달</div></div><div style="flex:1;text-align:center;padding:8px;background:#f5f5f5;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#999">22</div><div style="font-size:10px;color:#999">미입력</div></div></div>
+    <div id="dashSummary" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><div style="flex:1;text-align:center;padding:8px;background:#e8f5e9;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#2e7d32">0</div><div style="font-size:10px;color:#2e7d32">달성</div></div><div style="flex:1;text-align:center;padding:8px;background:#fff8e1;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#f57f17">0</div><div style="font-size:10px;color:#f57f17">주의</div></div><div style="flex:1;text-align:center;padding:8px;background:#ffebee;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#c62828">0</div><div style="font-size:10px;color:#c62828">미달</div></div><div style="flex:1;text-align:center;padding:8px;background:#f5f5f5;border-radius:8px"><div style="font-size:20px;font-weight:800;color:#999">34</div><div style="font-size:10px;color:#999">미입력</div></div></div>
     <div id="dashBody"><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 품질관리</div><div onclick="openDetailPopup(250)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
         <div style="font-size:18px">—</div>
         <div style="flex:1;min-width:0">
@@ -292,7 +292,7 @@ tr:hover td{background:#fafafa}
         <div style="font-size:18px">—</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:700;color:#333">무재해 사업장 실천</div>
-          <div style="font-size:10px;color:#888">6.1 · 건 · 목표:0</div>
+          <div style="font-size:10px;color:#888">45001 6.2 / IATF 6.1 · 건 · 목표:0</div>
           
         </div>
         <div style="text-align:right">
@@ -321,6 +321,138 @@ tr:hover td{background:#fafafa}
           <div style="font-size:16px;font-weight:800;color:#999">—</div>
           <div style="font-size:10px;color:#888">—%</div>
         </div>
+      </div></div><div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px">🏢 환경안전보건</div><div onclick="openDetailPopup(272)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">중대재해 발생 건수</div>
+          <div style="font-size:10px;color:#888">45001 6.2 · 건 · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(273)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">휴업재해 발생 건수</div>
+          <div style="font-size:10px;color:#888">45001 10.2 · 건 · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(274)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">아차사고 발굴 건수</div>
+          <div style="font-size:10px;color:#888">45001 10.2 · 건 · 목표:1</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(275)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">위험성평가 실시율</div>
+          <div style="font-size:10px;color:#888">45001 6.1.2 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(276)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">법정 안전보건교육 이수율</div>
+          <div style="font-size:10px;color:#888">45001 7.2 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(277)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">안전점검 지적사항 개선율</div>
+          <div style="font-size:10px;color:#888">45001 9.1.1 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(278)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">환경법규 위반 건수</div>
+          <div style="font-size:10px;color:#888">14001 9.1.2 · 건 · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(279)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">환경사고 발생 건수</div>
+          <div style="font-size:10px;color:#888">14001 8.2 · 건 · 목표:0</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(280)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">전력 사용량 원단위 절감률</div>
+          <div style="font-size:10px;color:#888">14001 9.1.1 · % · 목표:3</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(281)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">폐기물 재활용률</div>
+          <div style="font-size:10px;color:#888">14001 6.1.2 · % · 목표:95</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(282)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">준수평가 적합률</div>
+          <div style="font-size:10px;color:#888">14001/45001 9.1.2 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
+      </div><div onclick="openDetailPopup(283)" style="display:flex;align-items:center;gap:10px;padding:8px;background:#fafafa;border-radius:8px;margin-bottom:4px;cursor:pointer">
+        <div style="font-size:18px">—</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#333">비상사태 모의훈련 실시율</div>
+          <div style="font-size:10px;color:#888">14001/45001 8.2 · % · 목표:100</div>
+          
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#999">—</div>
+          <div style="font-size:10px;color:#888">—%</div>
+        </div>
       </div></div></div>
   </div>
 </div>
@@ -330,10 +462,146 @@ tr:hover td{background:#fafafa}
   <div class="card">
     <div class="card-tit">📝 월별 실적 입력</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="recYear" onchange="loadRecKpis()" style="font-size:13px"></select></div>
-      <div class="fg" style="flex:1;margin-bottom:0"><label>월</label><select id="recMonth" onchange="loadRecKpis()" style="font-size:13px"></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="recYear" onchange="loadRecKpis()" style="font-size:13px"><option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option><option value="2023">2023년</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>월</label><select id="recMonth" onchange="loadRecKpis()" style="font-size:13px"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div>
     </div>
-    <div id="recBody"></div>
+    <div id="recBody"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 품질관리</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="250">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">사내공정불량률(SKF SBC)</div><div style="font-size:10px;color:#888">목표:2000 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="250" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="250" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="251">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">사내공정불량률(SKF 씰)</div><div style="font-size:10px;color:#888">목표:600 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="251" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="251" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="252">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">사내공정불량률(세동산업)</div><div style="font-size:10px;color:#888">목표:300 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="252" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="252" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="253">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">사내공정불량률(일진)</div><div style="font-size:10px;color:#888">목표:1000 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="253" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="253" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="254">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">사내공정불량률(진양오일씰)</div><div style="font-size:10px;color:#888">목표:1000 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="254" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="254" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="255">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">수입검사 불량률(정민스틸)</div><div style="font-size:10px;color:#888">목표:0 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="255" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="255" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="256">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">수입검사 불량률(태경스틸)</div><div style="font-size:10px;color:#888">목표:0 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="256" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="256" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="257">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">수입검사 불량률(동일스테인레스)</div><div style="font-size:10px;color:#888">목표:0 PPM</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="257" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="257" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="258">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">Q-cost 비용</div><div style="font-size:10px;color:#888">목표:367 만원</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="258" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="258" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 생산관리</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="259">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">생산계획 대비 실적 달성률</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="259" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="259" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="260">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">설비 가동률</div><div style="font-size:10px;color:#888">목표:80 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="260" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="260" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="261">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">효율</div><div style="font-size:10px;color:#888">목표:80 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="261" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="261" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="262">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">예방보전 준수</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="262" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="262" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="263">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">MTTR 달성률</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="263" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="263" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 개발관리</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="264">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">개발수주 달성률</div><div style="font-size:10px;color:#888">목표:1 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="264" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="264" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="265">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">개발완료 달성률</div><div style="font-size:10px;color:#888">목표:1 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="265" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="265" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 영업관리</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="266">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">매출달성률</div><div style="font-size:10px;color:#888">목표:1352 백만원</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="266" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="266" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="267">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">고객사 납기준수율</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="267" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="267" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="268">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">고객사 추가운행건수</div><div style="font-size:10px;color:#888">목표:10 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="268" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="268" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="269">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">무재해 사업장 실천</div><div style="font-size:10px;color:#888">목표:0 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="269" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="269" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 구매자재</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="270">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">협력사 납기율</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="270" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="270" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="271">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">협력사 추가운송 발생건수</div><div style="font-size:10px;color:#888">목표:60 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="271" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="271" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 환경안전보건</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="272">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">중대재해 발생 건수</div><div style="font-size:10px;color:#888">목표:0 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="272" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="272" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="273">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">휴업재해 발생 건수</div><div style="font-size:10px;color:#888">목표:0 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="273" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="273" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="274">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">아차사고 발굴 건수</div><div style="font-size:10px;color:#888">목표:1 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="274" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="274" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="275">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">위험성평가 실시율</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="275" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="275" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="276">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">법정 안전보건교육 이수율</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="276" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="276" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="277">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">안전점검 지적사항 개선율</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="277" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="277" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="278">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">환경법규 위반 건수</div><div style="font-size:10px;color:#888">목표:0 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="278" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="278" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="279">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">환경사고 발생 건수</div><div style="font-size:10px;color:#888">목표:0 건</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="279" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="279" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="280">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">전력 사용량 원단위 절감률</div><div style="font-size:10px;color:#888">목표:3 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="280" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="280" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="281">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">폐기물 재활용률</div><div style="font-size:10px;color:#888">목표:95 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="281" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="281" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="282">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">준수평가 적합률</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="282" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="282" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="283">
+        <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">비상사태 모의훈련 실시율</div><div style="font-size:10px;color:#888">목표:100 %</div></div>
+        <input type="number" step="any" class="rec-val" data-kpiid="283" value="" placeholder="실적" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:13px;font-family:inherit;min-width:0">
+        <input type="text" class="rec-note" data-kpiid="283" value="" placeholder="비고" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:11px;font-family:inherit;min-width:0">
+      </div></div>
     <button class="btn btn-green" onclick="saveAllRecords()" style="margin-top:8px">💾 전체 저장</button>
   </div>
 </div>
@@ -353,28 +621,170 @@ tr:hover td{background:#fafafa}
         <option value="효과확인">🔵 효과확인</option>
         <option value="완료">✅ 완료</option>
       </select>
-      <select id="caFilterProc" onchange="renderCaList()" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:0">
-        <option value="">전체 프로세스</option>
-      </select>
+      <select id="caFilterProc" onchange="renderCaList()" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:0"><option value="">전체 프로세스</option><option value="61">품질관리</option><option value="62">생산관리</option><option value="63">개발관리</option><option value="64">영업관리</option><option value="65">구매자재</option><option value="66">환경안전보건</option></select>
     </div>
-    <div id="caListBody"></div>
+    <div id="caListBody"><div style="padding: 12px; background: rgb(255, 235, 238); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(21, 101, 192);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🔴 사내공정불량률(SKF 씰)</span>
+      <span style="font-size:10px;color:#888">2026년 6월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:8980 / 목표:600</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 6월 KPI 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 품질관리팀</span><span>기한: 2026-08-24</span>
+      
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(SKF SBC)</span>
+      <span style="font-size:10px;color:#888">2026년 5월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:6345 / 목표:2000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 5월 KPI 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 품질관리팀</span><span>기한: 2026-06-24</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(SKF SBC)</span>
+      <span style="font-size:10px;color:#888">2026년 4월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:6230 / 목표:2000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 4월 KPI 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 품질관리팀</span><span>기한: 2026-06-08</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 235, 238); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🔴 효율</span>
+      <span style="font-size:10px;color:#888">2026년 3월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">생산관리 · 실적:58 / 목표:80</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 3월 효율 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 생산팀</span><span>기한: 2026-05-05</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 235, 238); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🔴 효율</span>
+      <span style="font-size:10px;color:#888">2026년 2월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">생산관리 · 실적:70 / 목표:80</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 2월 효율 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 생산팀</span><span>기한: 2026-05-05</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 235, 238); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🔴 효율</span>
+      <span style="font-size:10px;color:#888">2026년 1월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">생산관리 · 실적:67 / 목표:80</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 1월 효율 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 생산팀</span><span>기한: 2026-05-05</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 235, 238); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🔴 설비 가동률</span>
+      <span style="font-size:10px;color:#888">2026년 3월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">생산관리 · 실적:60 / 목표:80</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 3월 설비 가동률 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 생산팀</span><span>기한: 2026-05-05</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 235, 238); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🔴 설비 가동률</span>
+      <span style="font-size:10px;color:#888">2026년 2월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">생산관리 · 실적:70 / 목표:80</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 2월 설비 가동률 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 생산팀</span><span>기한: 2026-05-05</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 설비 가동률</span>
+      <span style="font-size:10px;color:#888">2026년 1월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">생산관리 · 실적:69 / 목표:80</div>
+    <div style="font-size:11px;color:#666">금형부품 스페어 확보 미흡으로 가동률 저조</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: 생산팀</span><span>기한: 2026-05-05</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(진양오일씰)</span>
+      <span style="font-size:10px;color:#888">2026년 3월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:1714 / 목표:1000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 3월 사내공정불량률(진양오일씰) 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: —</span><span>기한: 2026-04-30</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(일진)</span>
+      <span style="font-size:10px;color:#888">2026년 2월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:2263 / 목표:1000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 2월 사내공정불량률(일진) 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: —</span><span>기한: 2026-04-30</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(일진)</span>
+      <span style="font-size:10px;color:#888">2026년 1월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:2137 / 목표:1000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 1월 사내공정불량률(일진) 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: —</span><span>기한: 2026-04-30</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(SKF SBC)</span>
+      <span style="font-size:10px;color:#888">2026년 3월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:4160 / 목표:2000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 3월 사내공정불량률(SKF ATC) 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: —</span><span>기한: 2026-04-30</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(SKF SBC)</span>
+      <span style="font-size:10px;color:#888">2026년 2월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:5171 / 목표:2000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 2월 사내공정불량률(SKF ATC) 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: —</span><span>기한: 2026-04-30</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div><div style="padding: 12px; background: rgb(255, 248, 225); border-radius: 10px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid rgb(198, 40, 40);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <span style="font-size:13px;font-weight:700;color:#333">🟡 사내공정불량률(SKF SBC)</span>
+      <span style="font-size:10px;color:#888">2026년 1월</span>
+    </div>
+    <div style="font-size:11px;color:#555;margin-bottom:4px">품질관리 · 실적:3974 / 목표:2000</div>
+    <div style="font-size:11px;color:#666">[자동발행] 2026년 1월 사내공정불량률(SKF ATC) 미달 - 원인분석 필요</div>
+    <div style="display:flex;gap:8px;margin-top:4px;font-size:10px;color:#888">
+      <span>담당: —</span><span>기한: 2026-04-30</span>
+      <span style="color:#c62828;font-weight:700">⚠ 기한초과</span>
+    </div></div></div>
   </div>
   <!-- 시정조치 통계 -->
   <div class="card">
     <div class="card-tit">📊 시정조치 현황</div>
-    <div id="caStats"></div>
+    <div id="caStats"><div style="display:flex;gap:6px;flex-wrap:wrap;text-align:center">
+    <div style="flex:1;padding:10px;background:#ffebee;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#c62828">6</div><div style="font-size:10px;color:#c62828">발행</div></div>
+    <div style="flex:1;padding:10px;background:#fff8e1;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#f57f17">9</div><div style="font-size:10px;color:#f57f17">조치중</div></div>
+    <div style="flex:1;padding:10px;background:#e3f2fd;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#1565c0">0</div><div style="font-size:10px;color:#1565c0">효과확인</div></div>
+    <div style="flex:1;padding:10px;background:#e8f5e9;border-radius:8px;min-width:60px"><div style="font-size:20px;font-weight:800;color:#2e7d32">0</div><div style="font-size:10px;color:#2e7d32">완료</div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <div style="flex:1;padding:8px;background:#fafafa;border-radius:8px;text-align:center;border:1px solid #eee"><div style="font-size:11px;color:#888">종결률</div><div style="font-size:18px;font-weight:800;color:#0d47a1">0%</div></div>
+    <div style="flex:1;padding:8px;background:#ffebee;border-radius:8px;text-align:center;border:1px solid #ffcdd2"><div style="font-size:11px;color:#888">기한초과</div><div style="font-size:18px;font-weight:800;color:#c62828">14건</div></div>
+  </div></div>
   </div>
 </div>
 
 <!-- ===== 추이 분석 ===== -->
-<div class="pnl" id="pnl3">
+<div class="pnl on" id="pnl3">
   <div class="card">
     <div class="card-tit">📈 KPI 추이 분석</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="trendProc" onchange="loadTrendKpi()" style="font-size:13px"><option value="">전체</option></select></div>
-      <div class="fg" style="flex:1;margin-bottom:0"><label>KPI</label><select id="trendKpi" style="font-size:13px"><option value="">선택</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="trendProc" onchange="loadTrendKpi()" style="font-size:13px"><option value="">전체</option><option value="61">품질관리</option><option value="62">생산관리</option><option value="63">개발관리</option><option value="64">영업관리</option><option value="65">구매자재</option><option value="66">환경안전보건</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>KPI</label><select id="trendKpi" style="font-size:13px"><option value="">KPI 선택</option><option value="ALL">📊 전체 KPI 조회</option><option value="250">사내공정불량률(SKF SBC)</option><option value="251">사내공정불량률(SKF 씰)</option><option value="252">사내공정불량률(세동산업)</option><option value="253">사내공정불량률(일진)</option><option value="254">사내공정불량률(진양오일씰)</option><option value="255">수입검사 불량률(정민스틸)</option><option value="256">수입검사 불량률(태경스틸)</option><option value="257">수입검사 불량률(동일스테인레스)</option><option value="258">Q-cost 비용</option><option value="259">생산계획 대비 실적 달성률</option><option value="260">설비 가동률</option><option value="261">효율</option><option value="262">예방보전 준수</option><option value="263">MTTR 달성률</option><option value="264">개발수주 달성률</option><option value="265">개발완료 달성률</option><option value="266">매출달성률</option><option value="267">고객사 납기준수율</option><option value="268">고객사 추가운행건수</option><option value="269">무재해 사업장 실천</option><option value="270">협력사 납기율</option><option value="271">협력사 추가운송 발생건수</option><option value="272">중대재해 발생 건수</option><option value="273">휴업재해 발생 건수</option><option value="274">아차사고 발굴 건수</option><option value="275">위험성평가 실시율</option><option value="276">법정 안전보건교육 이수율</option><option value="277">안전점검 지적사항 개선율</option><option value="278">환경법규 위반 건수</option><option value="279">환경사고 발생 건수</option><option value="280">전력 사용량 원단위 절감률</option><option value="281">폐기물 재활용률</option><option value="282">준수평가 적합률</option><option value="283">비상사태 모의훈련 실시율</option></select></div>
     </div>
-    <div class="fg"><label>년도</label><select id="trendYear" style="font-size:13px"></select></div>
+    <div class="fg"><label>년도</label><select id="trendYear" style="font-size:13px"><option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option><option value="2023">2023년</option></select></div>
     <button class="btn btn-sm" style="width:100%;margin-bottom:10px;padding:10px;font-size:14px;background:#1565c0;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="drawTrend()">🔍 조회</button>
     <div style="position:relative;width:100%;height:320px"><canvas id="trendChart"></canvas></div>
     <div id="trendTable" style="margin-top:10px"></div>
@@ -382,8 +792,8 @@ tr:hover td{background:#fafafa}
   <div class="card">
     <div class="card-tit">📊 팀별 프로세스 실적 종합</div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="summProc" onchange="drawSummary()" style="font-size:13px"><option value="">선택</option></select></div>
-      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="summYear" onchange="drawSummary()" style="font-size:13px"></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>프로세스</label><select id="summProc" onchange="drawSummary()" style="font-size:13px"><option value="">선택</option><option value="61">품질관리</option><option value="62">생산관리</option><option value="63">개발관리</option><option value="64">영업관리</option><option value="65">구매자재</option><option value="66">환경안전보건</option></select></div>
+      <div class="fg" style="flex:1;margin-bottom:0"><label>년도</label><select id="summYear" onchange="drawSummary()" style="font-size:13px"><option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option><option value="2023">2023년</option></select></div>
     </div>
     <div id="summaryTable" style="overflow-x:auto"></div>
   </div>
@@ -421,7 +831,7 @@ tr:hover td{background:#fafafa}
       </div>
       <div class="fg" style="flex:1;margin-bottom:0">
         <label>프로세스</label>
-        <select id="histProc" style="font-size:13px"><option value="">전체</option></select>
+        <select id="histProc" style="font-size:13px"><option value="">전체</option><option value="61">품질관리</option><option value="62">생산관리</option><option value="63">개발관리</option><option value="64">영업관리</option><option value="65">구매자재</option><option value="66">환경안전보건</option></select>
       </div>
     </div>
     <div class="btn-row">
@@ -435,7 +845,22 @@ tr:hover td{background:#fafafa}
 
   <div class="card">
     <div class="card-tit">👥 부서 관리</div>
-    <div id="deptList"></div>
+    <div id="deptList"><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">품질관리팀</span>
+    <button class="btn btn-sm btn-red" onclick="delDept(0,&#39;품질관리팀&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">영업관리팀</span>
+    <button class="btn btn-sm btn-red" onclick="delDept(0,&#39;영업관리팀&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">생산팀</span>
+    <button class="btn btn-sm btn-red" onclick="delDept(0,&#39;생산팀&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">개발팀</span>
+    <button class="btn btn-sm btn-red" onclick="delDept(0,&#39;개발팀&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">자재팀</span>
+    <button class="btn btn-sm btn-red" onclick="delDept(0,&#39;자재팀&#39;)">삭제</button>
+  </div></div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <input type="text" id="newDeptName" placeholder="새 부서명" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit">
       <button class="btn btn-sm btn-blue" onclick="addDept()">추가</button>
@@ -510,9 +935,55 @@ tr:hover td{background:#fafafa}
 
     <!-- 2) 부서별 수신자 -->
     <div style="font-size:12px;font-weight:700;color:#0d47a1;margin-bottom:6px">👤 부서별 수신자</div>
-    <div id="mailToList"></div>
+    <div id="mailToList">
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:#0d47a1;background:#e3f2fd;padding:4px 8px;border-radius:5px">개발팀 <span style="color:#666;font-weight:400">(1명)</span></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f0">
+        <input type="checkbox" checked="" onchange="toggleMailTo(4,this.checked)" title="발송 대상">
+        <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>황지원</b> <span style="color:#666">jf_story@naver.com</span>
+        </span>
+        <button class="btn btn-sm btn-red" onclick="delMailTo(4)">삭제</button>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:#0d47a1;background:#e3f2fd;padding:4px 8px;border-radius:5px">생산팀 <span style="color:#666;font-weight:400">(1명)</span></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f0">
+        <input type="checkbox" checked="" onchange="toggleMailTo(3,this.checked)" title="발송 대상">
+        <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>여혜빈</b> <span style="color:#666">yhb6382@naver.com</span>
+        </span>
+        <button class="btn btn-sm btn-red" onclick="delMailTo(3)">삭제</button>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:#0d47a1;background:#e3f2fd;padding:4px 8px;border-radius:5px">영업관리팀 <span style="color:#666;font-weight:400">(1명)</span></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f0">
+        <input type="checkbox" checked="" onchange="toggleMailTo(2,this.checked)" title="발송 대상">
+        <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>박현주</b> <span style="color:#666">overseas_h@naver.com</span>
+        </span>
+        <button class="btn btn-sm btn-red" onclick="delMailTo(2)">삭제</button>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:#0d47a1;background:#e3f2fd;padding:4px 8px;border-radius:5px">품질관리팀 <span style="color:#666;font-weight:400">(2명)</span></div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f0">
+        <input type="checkbox" checked="" onchange="toggleMailTo(1,this.checked)" title="발송 대상">
+        <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>김상기</b> <span style="color:#666">kimsanggi85@naver.com</span>
+        </span>
+        <button class="btn btn-sm btn-red" onclick="delMailTo(1)">삭제</button>
+      </div><div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid #f0f0f0">
+        <input type="checkbox" checked="" onchange="toggleMailTo(6,this.checked)" title="발송 대상">
+        <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <b>강병주</b> <span style="color:#666">seraulu@nate.com</span>
+        </span>
+        <button class="btn btn-sm btn-red" onclick="delMailTo(6)">삭제</button>
+      </div>
+    </div></div>
     <div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">
-      <select id="mailToDept" style="flex:1;min-width:110px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit"></select>
+      <select id="mailToDept" style="flex:1;min-width:110px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit"><option value="">선택</option><option value="품질관리팀">품질관리팀</option><option value="영업관리팀">영업관리팀</option><option value="생산팀">생산팀</option><option value="개발팀">개발팀</option><option value="자재팀">자재팀</option></select>
       <input type="text" id="mailToName" placeholder="이름" style="flex:1;min-width:80px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
       <input type="email" id="mailToEmail" placeholder="이메일" style="flex:2;min-width:150px;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
       <button class="btn btn-sm btn-blue" onclick="addMailTo()">추가</button>
@@ -548,8 +1019,8 @@ tr:hover td{background:#fafafa}
 
     <!-- 4) 수동 발송 -->
     <div style="margin-top:12px;display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap">
-      <div class="fg" style="flex:1;min-width:90px;margin-bottom:0"><label>연도</label><select id="mailYear" style="font-size:13px"></select></div>
-      <div class="fg" style="flex:1;min-width:90px;margin-bottom:0"><label>월</label><select id="mailMonth" style="font-size:13px"></select></div>
+      <div class="fg" style="flex:1;min-width:90px;margin-bottom:0"><label>연도</label><select id="mailYear" style="font-size:13px"><option value="2027">2027년</option><option value="2026">2026년</option><option value="2025">2025년</option><option value="2024">2024년</option><option value="2023">2023년</option></select></div>
+      <div class="fg" style="flex:1;min-width:90px;margin-bottom:0"><label>월</label><select id="mailMonth" style="font-size:13px"><option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option><option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option><option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option></select></div>
       <button class="btn btn-sm btn-gray" onclick="previewDeptMail()">👁 미리보기</button>
       <button class="btn btn-sm btn-green" onclick="sendDeptMail()">📨 발송</button>
     </div>
@@ -558,7 +1029,25 @@ tr:hover td{background:#fafafa}
 
   <div class="card">
     <div class="card-tit">🏢 프로세스 관리</div>
-    <div id="procList"></div>
+    <div id="procList"><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">품질관리</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(61,&#39;품질관리&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">생산관리</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(62,&#39;생산관리&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">개발관리</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(63,&#39;개발관리&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">영업관리</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(64,&#39;영업관리&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">구매자재</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(65,&#39;구매자재&#39;)">삭제</button>
+  </div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0">
+    <span style="flex:1;font-size:13px;font-weight:600">환경안전보건</span>
+    <button class="btn btn-sm btn-red" onclick="delProcess(66,&#39;환경안전보건&#39;)">삭제</button>
+  </div></div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <input type="text" id="newProcName" placeholder="새 프로세스명" style="flex:1;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit">
       <button class="btn btn-sm btn-blue" onclick="addProcess()">추가</button>
@@ -570,8 +1059,280 @@ tr:hover td{background:#fafafa}
       <span>📋 KPI 마스터 관리</span>
       <button class="btn btn-sm btn-blue" onclick="openKpiModal()">+ KPI 등록</button>
     </div>
-    <div class="fg"><label>프로세스 필터</label><select id="kpiFilterProc" onchange="renderKpiList()" style="font-size:13px"><option value="">전체</option></select></div>
-    <div id="kpiListBody" class="scroll-x"></div>
+    <div class="fg"><label>프로세스 필터</label><select id="kpiFilterProc" onchange="renderKpiList()" style="font-size:13px"><option value="">전체</option><option value="61">품질관리</option><option value="62">생산관리</option><option value="63">개발관리</option><option value="64">영업관리</option><option value="65">구매자재</option><option value="66">환경안전보건</option></select></div>
+    <div id="kpiListBody" class="scroll-x"><table><tbody><tr><th>프로세스</th><th>KPI명</th><th>부서</th><th>단위</th><th>방향</th><th>목표</th><th>경고</th><th>조항</th><th>활성</th><th></th></tr><tr>
+      <td>품질관리</td><td style="font-weight:600">사내공정불량률(SKF SBC)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>2000</td><td>3000</td><td style="font-size:10px">8.5.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(250)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(250)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">사내공정불량률(SKF 씰)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>600</td><td>1000</td><td style="font-size:10px">8.5.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(251)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(251)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">사내공정불량률(세동산업)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>300</td><td>500</td><td style="font-size:10px">8.5.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(252)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(252)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">사내공정불량률(일진)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>1000</td><td>1500</td><td style="font-size:10px">8.5.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(253)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(253)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">사내공정불량률(진양오일씰)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>1000</td><td>1500</td><td style="font-size:10px">8.5.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(254)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(254)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">수입검사 불량률(정민스틸)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>0</td><td>100</td><td style="font-size:10px">8.4.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(255)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(255)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">수입검사 불량률(태경스틸)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>0</td><td>100</td><td style="font-size:10px">8.4.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(256)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(256)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">수입검사 불량률(동일스테인레스)</td><td style="font-size:11px">품질관리팀</td><td>PPM</td><td>↓</td>
+      <td>0</td><td>100</td><td style="font-size:10px">8.4.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(257)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(257)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>품질관리</td><td style="font-weight:600">Q-cost 비용</td><td style="font-size:11px">품질관리팀</td><td>만원</td><td>↓</td>
+      <td>367</td><td>330</td><td style="font-size:10px">10.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(258)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(258)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>생산관리</td><td style="font-weight:600">생산계획 대비 실적 달성률</td><td style="font-size:11px">생산팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>90</td><td style="font-size:10px">8.5.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(259)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(259)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>생산관리</td><td style="font-weight:600">설비 가동률</td><td style="font-size:11px">생산팀</td><td>%</td><td>↑</td>
+      <td>80</td><td>70</td><td style="font-size:10px">8.5.1.5</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(260)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(260)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>생산관리</td><td style="font-weight:600">효율</td><td style="font-size:11px">생산팀</td><td>%</td><td>↑</td>
+      <td>80</td><td>70</td><td style="font-size:10px">8.5.1.5</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(261)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(261)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>생산관리</td><td style="font-weight:600">예방보전 준수</td><td style="font-size:11px">생산팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>90</td><td style="font-size:10px">8.5.1.5</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(262)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(262)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>생산관리</td><td style="font-weight:600">MTTR 달성률</td><td style="font-size:11px">생산팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>85</td><td style="font-size:10px">8.5.1.5</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(263)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(263)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>개발관리</td><td style="font-weight:600">개발수주 달성률</td><td style="font-size:11px">개발팀</td><td>건</td><td>↑</td>
+      <td><span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700" title="월별 목표 설정됨">📅월별</span></td><td>5</td><td style="font-size:10px">8.3</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(264)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(264)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>개발관리</td><td style="font-weight:600">개발완료 달성률</td><td style="font-size:11px">개발팀</td><td>건</td><td>↓</td>
+      <td><span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700" title="월별 목표 설정됨">📅월별</span></td><td>5</td><td style="font-size:10px">8.3</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(265)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(265)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>영업관리</td><td style="font-weight:600">매출달성률</td><td style="font-size:11px">영업관리팀</td><td>백만원</td><td>↑</td>
+      <td>1352</td><td>1300</td><td style="font-size:10px">9.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(266)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(266)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>영업관리</td><td style="font-weight:600">고객사 납기준수율</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>90</td><td style="font-size:10px">8.5.4</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(267)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(267)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>영업관리</td><td style="font-weight:600">고객사 추가운행건수</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↓</td>
+      <td>10</td><td>5</td><td style="font-size:10px">9.1.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(268)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(268)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>영업관리</td><td style="font-weight:600">무재해 사업장 실천</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↓</td>
+      <td>0</td><td>1</td><td style="font-size:10px">45001 6.2 / IATF 6.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(269)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(269)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>구매자재</td><td style="font-weight:600">협력사 납기율</td><td style="font-size:11px">자재팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>90</td><td style="font-size:10px">8.4.2.4</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(270)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(270)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>구매자재</td><td style="font-weight:600">협력사 추가운송 발생건수</td><td style="font-size:11px">자재팀</td><td>건</td><td>↓</td>
+      <td>60</td><td>70</td><td style="font-size:10px">8.4.2.4</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(271)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(271)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">중대재해 발생 건수</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↓</td>
+      <td>0</td><td>1</td><td style="font-size:10px">45001 6.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(272)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(272)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">휴업재해 발생 건수</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↓</td>
+      <td>0</td><td>1</td><td style="font-size:10px">45001 10.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(273)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(273)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">아차사고 발굴 건수</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↑</td>
+      <td>1</td><td>0</td><td style="font-size:10px">45001 10.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(274)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(274)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">위험성평가 실시율</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>90</td><td style="font-size:10px">45001 6.1.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(275)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(275)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">법정 안전보건교육 이수율</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>95</td><td style="font-size:10px">45001 7.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(276)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(276)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">안전점검 지적사항 개선율</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>90</td><td style="font-size:10px">45001 9.1.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(277)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(277)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">환경법규 위반 건수</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↓</td>
+      <td>0</td><td>1</td><td style="font-size:10px">14001 9.1.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(278)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(278)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">환경사고 발생 건수</td><td style="font-size:11px">영업관리팀</td><td>건</td><td>↓</td>
+      <td>0</td><td>1</td><td style="font-size:10px">14001 8.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(279)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(279)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">전력 사용량 원단위 절감률</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>3</td><td>1</td><td style="font-size:10px">14001 9.1.1</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(280)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(280)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">폐기물 재활용률</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>95</td><td>90</td><td style="font-size:10px">14001 6.1.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(281)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(281)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">준수평가 적합률</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>95</td><td style="font-size:10px">14001/45001 9.1.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(282)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(282)">삭제</button>
+      </td>
+    </tr><tr>
+      <td>환경안전보건</td><td style="font-weight:600">비상사태 모의훈련 실시율</td><td style="font-size:11px">영업관리팀</td><td>%</td><td>↑</td>
+      <td>100</td><td>100</td><td style="font-size:10px">14001/45001 8.2</td>
+      <td><span class="badge b-ok">ON</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-gray" onclick="editKpi(283)">수정</button>
+        <button class="btn btn-sm btn-red" onclick="delKpi(283)">삭제</button>
+      </td>
+    </tr></tbody></table></div>
   </div>
 
   <div class="card">
@@ -1522,10 +2283,39 @@ function loadTrendKpi(){
   filtered.forEach(k=>{const o=document.createElement('option');o.value=k.id;o.textContent=k.kpi_name;kS.appendChild(o)});
 }
 
+// ★ 차트 생성 안전 래퍼 (Chart.js 미로드/오류 시에도 표는 살린다)
+function safeChart(cfg){
+  const cv=document.getElementById('trendChart');
+  try{
+    if(typeof Chart==='undefined')throw new Error('Chart.js 라이브러리가 로드되지 않았습니다');
+    const ctx=cv.getContext('2d');
+    if(trendChartInst){trendChartInst.destroy();trendChartInst=null}
+    trendChartInst=new Chart(ctx,cfg);
+    return true;
+  }catch(e){
+    console.error('[차트 생성 실패]',e);
+    if(trendChartInst){try{trendChartInst.destroy()}catch(_){}trendChartInst=null}
+    const box=cv.parentElement;
+    let msg=box.querySelector('.chartErr');
+    if(!msg){msg=document.createElement('div');msg.className='chartErr';
+      msg.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:#c62828;background:#ffebee;border-radius:8px;padding:10px';
+      box.appendChild(msg)}
+    msg.textContent='⚠ 그래프 표시 실패: '+e.message+' (아래 표는 정상 조회됨)';
+    return false;
+  }
+}
+function clearChartErr(){
+  const cv=document.getElementById('trendChart');
+  const m=cv.parentElement.querySelector('.chartErr');
+  if(m)m.remove();
+}
+
 function drawTrend(){
   const kpiVal=document.getElementById('trendKpi').value;
   const year=parseInt(document.getElementById('trendYear').value);
-  if(!kpiVal||isNaN(year))return;
+  if(!kpiVal){showToast('KPI를 선택하세요 (전체 조회는 "📊 전체 KPI 조회" 선택)');return}
+  if(isNaN(year)){showToast('년도를 선택하세요');return}
+  clearChartErr();
 
   if(kpiVal==='ALL'){drawTrendAll(year);return}
 
@@ -1542,9 +2332,7 @@ function drawTrend(){
     targets.push(k?getMonthTarget(k,m):null);
   }
 
-  const ctx=document.getElementById('trendChart').getContext('2d');
-  if(trendChartInst)trendChartInst.destroy();
-  trendChartInst=new Chart(ctx,{
+  safeChart({
     type:'line',
     data:{
       labels,
@@ -1621,49 +2409,36 @@ function drawTrend(){
 function drawTrendAll(year){
   const pid=document.getElementById('trendProc').value;
   const filtered=pid?kpis.filter(k=>k.process_id===parseInt(pid)&&k.is_active):kpis.filter(k=>k.is_active);
-  if(!filtered.length){document.getElementById('trendTable').innerHTML='<p style="text-align:center;color:#999">KPI 없음</p>';return}
+  clearChartErr();
+  if(!filtered.length){
+    if(trendChartInst){try{trendChartInst.destroy()}catch(e){}trendChartInst=null}
+    document.getElementById('trendTable').innerHTML='<p style="text-align:center;color:#999;padding:20px">조회 가능한 활성 KPI가 없습니다.<br><span style="font-size:11px">설정 탭에서 KPI 사용여부를 확인하세요.</span></p>';
+    return;
+  }
 
-  // 차트: 전체 KPI 라인
-  const labels=[];for(let m=1;m<=12;m++)labels.push(m+'월');
-  const colors=['#1565c0','#c62828','#2e7d32','#e65100','#6a1b9a','#00838f','#4e342e','#37474f','#ad1457','#1b5e20','#ff6f00','#283593'];
-  const datasets=filtered.map((k,i)=>{
-    const data=[];
-    for(let m=1;m<=12;m++){const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);data.push(r?r.actual_value:null)}
-    return{label:k.kpi_name,data,borderColor:colors[i%colors.length],tension:.3,pointRadius:3,fill:false};
-  });
-  const ctx=document.getElementById('trendChart').getContext('2d');
-  if(trendChartInst)trendChartInst.destroy();
-  trendChartInst=new Chart(ctx,{
-    type:'line',data:{labels,datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{size:9,family:'Noto Sans KR'},boxWidth:12}}},
-      scales:{y:{beginAtZero:false,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}
-    }
-  });
-
-  // 테이블: 전체 KPI 종합 (그래프와 동일 폭으로 화면에 꽉 차게)
+  // ================= ① 표 먼저 생성 (차트 실패해도 데이터는 반드시 표시) =================
   let h='<table style="font-size:10px;width:100%;table-layout:fixed;border-collapse:collapse"><tr><th style="width:18%;text-align:left">KPI</th><th style="width:6%">단위</th><th style="width:6%">목표</th>';
   for(let m=1;m<=12;m++)h+='<th style="width:4.5%;padding:6px 2px">'+m+'</th>';
   h+='<th style="width:8%;background:#e3f2fd">평균</th><th style="width:8%;background:#e3f2fd">달성률</th></tr>';
-  let totalNgNoCa=0;
+  let totalNgNoCa=0, dataCount=0;
   filtered.forEach(k=>{
     const recs=records.filter(r=>r.kpi_id===k.id&&r.year===year);
     let sum=0,cnt=0;
-    // ★ 월별 목표가 있으면 "월별" 라벨, 없으면 단일값
     const isMonthly=hasMonthlyTargets(k);
     const targetCell=isMonthly
       ?'<span style="background:#fff3e0;color:#e65100;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700">📅월별</span>'
       :(k.target_value??'—');
     h+='<tr><td style="font-weight:600;word-break:break-all;line-height:1.3;text-align:left">'+k.kpi_name+'</td><td style="text-align:center">'+(k.unit||'')+'</td><td style="color:#c62828;text-align:center">'+targetCell+'</td>';
-    let totalTargetSum=0,targetCnt=0; // 달성률 계산용 평균 목표
+    let totalTargetSum=0,targetCnt=0;
     for(let m=1;m<=12;m++){
-      const r=recs.find(x=>x.month===m);const v=r?r.actual_value:null;
+      const r=recs.find(x=>x.month===m);
+      const v=(r&&r.actual_value!==null&&r.actual_value!==undefined&&r.actual_value!=='')?parseFloat(r.actual_value):null;
       const monthT=getMonthTarget(k,m);
       const monthA=getMonthAlert(k,m);
-      if(v!==null){sum+=v;cnt++}
+      if(v!==null&&!isNaN(v)){sum+=v;cnt++;dataCount++}
       if(monthT!=null){totalTargetSum+=monthT;targetCnt++}
       let bg='',caIcon='';
-      if(v!==null&&monthT!=null){
+      if(v!==null&&!isNaN(v)&&monthT!=null){
         const j=judge(v,monthT,monthA,k.direction);
         bg=j==='ok'?'background:#e8f5e9':j==='ng'?'background:#ffebee':'background:#fff8e1';
         if(j==='ng'){
@@ -1677,13 +2452,11 @@ function drawTrendAll(year){
           }
         }
       }
-      // 월별 목표가 있으면 셀에 작게 목표 표시
       const targetTip=isMonthly&&monthT!=null?`<span style="font-size:8px;color:#999;display:block">${monthT}</span>`:'';
-      h+='<td style="text-align:center;padding:6px 1px;'+bg+'">'+(v!==null?v+''+caIcon:'—')+targetTip+'</td>';
+      h+='<td style="text-align:center;padding:6px 1px;'+bg+'">'+((v!==null&&!isNaN(v))?v+''+caIcon:'—')+targetTip+'</td>';
     }
     const avg=cnt?(sum/cnt).toFixed(1):'—';
     let pct='—';
-    // 달성률은 평균 목표 vs 평균 실적
     const avgT=targetCnt?(totalTargetSum/targetCnt):null;
     if(cnt&&avgT!=null){
       const pv=calcAchievement(sum/cnt, avgT, k.direction);
@@ -1700,7 +2473,40 @@ function drawTrendAll(year){
       <button onclick="trendBatchIssueAll(${year})" style="font-size:11px;padding:6px 14px;border:none;background:#c62828;color:#fff;border-radius:6px;cursor:pointer;font-weight:700">🔧 전체 일괄 발행</button>
     </div>`;
   }
-  document.getElementById('trendTable').innerHTML=h+allBatchBtn;
+  let noData='';
+  if(dataCount===0){
+    noData=`<div style="margin-bottom:8px;padding:10px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;font-size:12px;color:#e65100">⚠ ${year}년 실적 데이터가 없습니다. [실적] 탭에서 입력 후 조회하세요. (KPI ${filtered.length}건)</div>`;
+  }
+  document.getElementById('trendTable').innerHTML=noData+h+allBatchBtn;
+
+  // ================= ② 차트 (실패해도 위 표는 유지) =================
+  const labels=[];for(let m=1;m<=12;m++)labels.push(m+'월');
+  const colors=['#1565c0','#c62828','#2e7d32','#e65100','#6a1b9a','#00838f','#4e342e','#37474f','#ad1457','#1b5e20','#ff6f00','#283593'];
+  const dashes=[[],[6,3],[2,2]];
+  const datasets=filtered.map((k,i)=>{
+    const data=[];
+    for(let m=1;m<=12;m++){
+      const r=records.find(x=>x.kpi_id===k.id&&x.year===year&&x.month===m);
+      const v=(r&&r.actual_value!==null&&r.actual_value!==undefined&&r.actual_value!=='')?parseFloat(r.actual_value):null;
+      data.push((v!==null&&!isNaN(v))?v:null);
+    }
+    return{label:k.kpi_name,data,borderColor:colors[i%colors.length],backgroundColor:colors[i%colors.length],
+      borderDash:dashes[Math.floor(i/colors.length)%dashes.length],
+      borderWidth:1.5,tension:.3,pointRadius:2,fill:false,spanGaps:true};
+  });
+  const manyKpi=filtered.length>12;
+  safeChart({
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'nearest',intersect:false},
+      plugins:{
+        legend:{position:'bottom',maxHeight:manyKpi?70:120,
+          labels:{font:{size:9,family:'Noto Sans KR'},boxWidth:10,boxHeight:8,padding:6}},
+        tooltip:{bodyFont:{size:10},titleFont:{size:11}}
+      },
+      scales:{y:{beginAtZero:false,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}
+    }
+  });
 }
 
 function drawSummary(){
@@ -3935,6 +4741,7 @@ function exportPerfSummary(){
   }
 })();
 </script>
+
 
 
 </body></html>
