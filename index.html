@@ -656,7 +656,7 @@ tr:hover td{background:#fafafa}
   <div class="card">
     <div class="card-tit" style="justify-content:space-between">
       <span>🔧 KPI 시정조치 관리</span>
-      <button class="btn btn-sm btn-blue" onclick="openCaModal()">+ 시정조치 발행</button>
+      <span style="display:flex;gap:6px"><button class="btn btn-sm" style="background:#6a1b9a;color:#fff" onclick="qcaFillAll()">✨ 품질팀 미달건 자동입력</button><button class="btn btn-sm btn-blue" onclick="openCaModal()">+ 시정조치 발행</button></span>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
       <select id="caFilterStatus" onchange="renderCaList()" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:0">
@@ -1571,8 +1571,9 @@ CREATE POLICY "kpi_ca_all" ON kpi_corrective_action FOR ALL USING (true) WITH CH
       <div class="fg" style="flex:1"><label>목표값</label><input type="number" id="caTarget" step="any"></div>
     </div>
     <div class="fg"><label>상태</label><select id="caStatus"><option value="발행">🔴 발행</option><option value="조치중">🟡 조치중</option><option value="효과확인">🔵 효과확인</option><option value="완료">✅ 완료</option></select></div>
-    <div class="fg"><label>발생원인 분석 *</label><textarea id="caCause" placeholder="왜 미달되었는가? (5Why, 특성요인도 등)" rows="3" onfocus="clearAutoIssueText(this)"></textarea></div>
-    <div class="fg"><label>시정조치 계획 *</label><textarea id="caAction" placeholder="어떤 조치를 할 것인가?" rows="3" onfocus="clearAutoIssueText(this)"></textarea></div>
+    <button type="button" class="btn btn-sm" style="background:#6a1b9a;color:#fff;margin-bottom:8px;width:100%" onclick="qcaFillModal()">✨ 고객사별 시정조치·개선방향 자동작성</button>
+    <div class="fg"><label>발생원인 분석 *</label><textarea id="caCause" placeholder="왜 미달되었는가? (5Why, 특성요인도 등)" rows="6" onfocus="clearAutoIssueText(this)"></textarea></div>
+    <div class="fg"><label>시정조치 계획 / 개선활동 방향 *</label><textarea id="caAction" placeholder="어떤 조치를 할 것인가?" rows="6" onfocus="clearAutoIssueText(this)"></textarea></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label>담당자</label><select id="caResp" style="font-size:13px"></select></div>
       <div class="fg" style="flex:1"><label>완료기한</label><input type="date" id="caDue"></div>
@@ -4788,5 +4789,169 @@ function exportPerfSummary(){
 </script>
 
 
+
+<script>
+/* ===== 품질팀 미달건 고객사별 시정조치 자동작성 (addon v1.0) ===== */
+(function(){
+const AUTO_MARK='【자동작성】';
+const MAT={TAEKYUNG:'SPCC',JEONGMIN:'C67S·S55CM',DONGIL:'STS304/430'};
+const TPL={
+ SKF_SEAL:{nm:'SKF 씰',
+  cause:['금형 전단날 마모로 버(Burr)·치수 편차 발생 — 연마주기가 타발수 기준으로 관리되지 않음','세척공정 미보유로 스크랩·이물 부착품 선별 부담 증가','자동검사기 미보유로 육안검사 의존 — 초·중·종물 검사 사이 구간 불량 유출 가능','금형 셋업 직후 초기품 관리 미흡 여부 확인 필요'],
+  action:['불량 유형별 Worst 3(버·찍힘·변형·치수) 층별 후 해당 금형 즉시 점검·연마','금형 연마주기를 타발수 기준으로 설정하고 금형 수리관리 시스템에 등록','초·중·종물 + 시간당 순회검사 추가, 한도견본 재정비 및 작업자 재교육','스크랩 배출 슈트·에어블로우 점검으로 이물 혼입 방지'],
+  dir:['불량률 월간→주간 모니터링 전환, 2개월 연속 목표 달성 시 종결','금형 예방보전(PM) 연계 및 비전검사 도입 검토','고객 클레임 연계 여부 확인 후 PFMEA·관리계획서 반영']},
+ SBC:{nm:'SKF SBC',
+  cause:['Progressive 금형 1타발에 INNER/OUTER 동시 생산 — 한쪽 공정 불량 시 동시 손실 발생','금형 호기(1·2·3호)별 상태 편차 존재, 호기별 불량 층별관리 미흡','피더 이송·파일럿 위치 편차에 따른 치수·형상 불량','소재 두께·폭 편차 영향 여부 확인 필요'],
+  action:['호기별·INNER/OUTER별 불량 분리 집계 후 Worst 호기 금형 우선 수리','피더 피치·파일럿 핀 마모 점검, 셋업 체크시트에 이송 확인 항목 추가','초물 치수 측정 항목 확대, 중·종물 검사 주기 단축','소재 LOT별 두께·폭 성적서 대조 강화'],
+  dir:['호기별 불량 추이 월간 보고, 개선 완료 호기부터 순차 목표 적용','목표 대비 단계별 감축 계획 수립(월별 중간목표 설정)','연속 미달 시 8D 대책서 전환 및 근본원인 수평전개']},
+ JINYANG:{nm:'진양오일씰',
+  cause:['소형 씰 부품 특성상 취급·적재 중 찍힘·변형 발생','완제품 랙 미보유로 파렛트 적재 시 압착·낙하 위험','금형 전단날 마모에 따른 버 발생','육안검사 의존으로 미세 결함 검출 한계'],
+  action:['불량 유형 층별 후 취급·적재 기인 불량 분리','박스 적재 수량·파렛트 적재 단수 표준화, 작업표준서 개정','해당 금형 점검·연마 및 연마주기 설정','한도견본 비치·확대경 검사 등 검사 방법 보완'],
+  dir:['취급 기인 불량 제로화 활동(포장·운반 개선)','금형 예방보전 연계로 버 불량 사전 차단','개선 효과 3개월 추적 후 종결']},
+ ILJIN:{nm:'일진',
+  cause:['다품종 일반기종 생산으로 금형 교환 빈번 — 셋업 초기 불량 발생','기종 교체 시 잔량·식별 관리 미흡에 따른 혼입 위험','금형 마모에 따른 버·치수 편차'],
+  action:['셋업 후 초물 승인 강화(치수·외관 확인 후 양산 착수)','기종 교체 시 라인 클리어런스 체크 시행, 잔량 식별표 부착','불량 빈발 기종 금형 점검·수리'],
+  dir:['기종별 불량률 층별관리, 빈발 기종 금형 개선 우선 추진','셋업 표준시간·초물 판정 기준 표준화','효과 확인 후 타 고객사 기종 수평전개']},
+ SEDONG:{nm:'세동산업',
+  cause:['고객 사급 소재 사용 — 자사 수입검사 대상 제외로 소재 편차 사전 검증 한계','금형 마모에 따른 버·치수 편차','육안검사 의존으로 결함 검출 한계'],
+  action:['사급 소재 투입 전 외관·두께 확인, 이상 시 고객사 즉시 통보','소재 기인 / 공정 기인 불량 분리 집계','해당 금형 점검·연마 및 검사 주기 강화'],
+  dir:['소재 기인 불량 데이터 고객사 공유 및 개선 요청','공정 기인 불량은 금형 PM 연계로 감축','효과 확인 후 종결']},
+ BUKANG:{nm:'부강스프링',
+  cause:['고객 사급 소재 사용 — 자사 수입검사 대상 제외로 소재 편차 사전 검증 한계','금형 마모에 따른 버·치수 편차','육안검사 의존으로 결함 검출 한계'],
+  action:['사급 소재 투입 전 외관·두께 확인, 이상 시 고객사 즉시 통보','소재 기인 / 공정 기인 불량 분리 집계','해당 금형 점검·연마 및 검사 주기 강화'],
+  dir:['소재 기인 불량 데이터 고객사 공유 및 개선 요청','공정 기인 불량은 금형 PM 연계로 감축','효과 확인 후 종결']},
+ SUPPLIER:{nm:'',
+  cause:['공급사 소재 두께·폭·표면결함 편차 발생','밀시트(성분·기계적 성질) 대조 절차 미흡 여부 확인 필요','입고 샘플링 수량 부족으로 부적합 LOT 검출 한계'],
+  action:['공급사 시정조치 요구서(SCAR) 발행 및 회신 접수','부적합 LOT 반품·선별 조치','밀시트 대조 항목 강화, 입고 검사 샘플 수 확대'],
+  dir:['공급사 품질평가(월간) 반영 및 등급 관리','연속 미달 시 공급사 공정감사(SQ/QT3 기준) 실시','개선 확인 후 샘플링 수준 원복']},
+ QCOST:{nm:'Q-cost',
+  cause:['사내 불량 폐기·재작업 비용 증가','고객사 선별비용 발생'],
+  action:['비용 항목별(폐기·재작업·선별) 분석 및 Worst 고객사 원인 추적','선별비 발생 건 시정조치 연계','불량률 미달 고객사 대책과 통합 관리'],
+  dir:['실패비용 → 예방비용 전환(금형 PM·검사 강화)','월간 Q-cost 추이 경영검토 보고']},
+ DEFAULT:{nm:'',
+  cause:['불량 유형·발생 공정 층별 필요','금형 마모 및 셋업 관리 상태 확인 필요','검사 방법(육안검사 의존) 적정성 확인 필요'],
+  action:['불량 Worst 3 층별 및 원인 금형 점검','초·중·종물 검사 강화 및 한도견본 재정비','작업자 재교육'],
+  dir:['월간 추이 모니터링, 2개월 연속 달성 시 종결','PFMEA·관리계획서 반영 검토']}
+};
+function custKey(name){
+  const n=(name||'').replace(/\s/g,'').toUpperCase();
+  if(/수입검사/.test(n)){
+    if(/태경/.test(n))return'TAEKYUNG';
+    if(/정민|동국/.test(n))return'JEONGMIN';
+    if(/동일/.test(n))return'DONGIL';
+    return'SUPPLIER';
+  }
+  if(/SBC|ATC/.test(n))return'SBC';
+  if(/씰/.test(n)&&/SKF/.test(n))return'SKF_SEAL';
+  if(/진양/.test(n))return'JINYANG';
+  if(/일진/.test(n))return'ILJIN';
+  if(/세동/.test(n))return'SEDONG';
+  if(/부강/.test(n))return'BUKANG';
+  if(/Q-?COST/.test(n))return'QCOST';
+  return'DEFAULT';
+}
+function isQualityKpi(k){
+  if(!k)return false;
+  const pn=(processes.find(p=>p.id===k.process_id)||{}).name||'';
+  return /품질/.test(pn)||/품질/.test(k.dept||'');
+}
+function worse(v,t,dir){v=parseFloat(v);t=parseFloat(t);if(isNaN(v)||isNaN(t))return false;return dir==='lower_better'?v>t:v<t}
+function consecMiss(k,y,m){
+  let c=0,yy=y,mm=m;
+  for(let i=0;i<12;i++){
+    const r=records.find(x=>x.kpi_id===k.id&&x.year===yy&&x.month===mm);
+    if(!r||!worse(r.actual_value,getMonthTarget(k,mm),k.direction))break;
+    c++;mm--;if(mm<1){mm=12;yy--}
+  }
+  return c;
+}
+function fmt(x){const n=parseFloat(x);return isNaN(n)?'—':(Math.round(n*100)/100).toLocaleString()}
+function buildCa(k,y,m,actual,target){
+  const key=custKey(k.kpi_name);
+  const base=TPL[MAT[key]?'SUPPLIER':key]||TPL.DEFAULT;
+  const who=MAT[key]?(k.kpi_name.match(/\(([^)]+)\)/)||[])[1]||'공급사':(base.nm||((k.kpi_name.match(/\(([^)]+)\)/)||[])[1])||'');
+  const a=parseFloat(actual),t=parseFloat(target);
+  let perf='실적 '+fmt(actual)+' / 목표 '+fmt(target);
+  if(!isNaN(a)&&!isNaN(t)&&t!==0){
+    if(k.direction==='lower_better')perf+=' (목표 대비 '+(a/t).toFixed(1)+'배, 초과 '+fmt(a-t)+')';
+    else perf+=' (달성률 '+(a/t*100).toFixed(1)+'%)';
+  }
+  const cm=(y&&m)?consecMiss(k,y,m):0;
+  const head=AUTO_MARK+' '+y+'년 '+m+'월 '+k.kpi_name+' 미달\n· '+perf+(cm>=2?'\n· 연속 '+cm+'개월 미달':'')+(MAT[key]?'\n· 대상 소재: '+MAT[key]:'');
+  const cause=head+'\n\n■ 발생원인 분석\n'+base.cause.map((s,i)=>(i+1)+') '+s).join('\n')+'\n\n※ 자동작성 초안 — 불량 Worst 데이터 확인 후 수정';
+  const acts=base.action.slice();
+  if(cm>=2)acts.push('연속 '+cm+'개월 미달 → 8D 대책서(특별불량 대책서) 발행 및 근본원인 분석');
+  let action='■ 시정조치 내용 ('+(who||'해당')+')\n'+acts.map((s,i)=>(i+1)+') '+s).join('\n')+'\n\n■ 개선활동 방향\n'+base.dir.map(s=>'- '+s).join('\n');
+  if(!isNaN(t))action+='\n- 목표 '+fmt(t)+(k.direction==='lower_better'?' 이하':' 이상')+' 달성 여부 익월 실적으로 효과확인';
+  return{cause,action_plan:action};
+}
+function isPlaceholder(s){s=(s||'').trim();return !s||s.startsWith('[자동발행]')}
+window.qcaBuild=buildCa;
+
+// 1) 발행 시 자동 입력 (개별·일괄·전체 발행 모두)
+const _ins=sbInsert;
+sbInsert=async function(table,data){
+  if(table==='kpi_corrective_action'){
+    const fix=row=>{
+      const k=kpis.find(x=>x.id===row.kpi_id);
+      if(isQualityKpi(k)&&isPlaceholder(row.cause)&&isPlaceholder(row.action_plan)){
+        Object.assign(row,buildCa(k,row.record_year,row.record_month,row.actual_value,row.target_value));
+        if(!row.responsible)row.responsible=k.dept||'';
+      }
+      return row;
+    };
+    data=Array.isArray(data)?data.map(fix):fix(data);
+  }
+  return _ins(table,data);
+};
+
+// 2) 기존 품질팀 미달건 일괄 자동입력
+window.qcaFillAll=async function(){
+  const tgt=caList.filter(ca=>{const k=kpis.find(x=>x.id===ca.kpi_id);return isQualityKpi(k)&&ca.status!=='완료'});
+  const empty=tgt.filter(ca=>isPlaceholder(ca.cause)||isPlaceholder(ca.action_plan));
+  const auto=tgt.filter(ca=>!empty.includes(ca)&&(ca.cause||'').startsWith(AUTO_MARK));
+  if(!empty.length&&!auto.length){showToast('자동입력할 품질팀 미달건이 없습니다');return}
+  let list=empty;
+  if(auto.length&&confirm('이전에 자동작성된 '+auto.length+'건도 최신 내용으로 다시 작성할까요?\n(직접 수정한 내용이 있으면 [취소])'))list=empty.concat(auto);
+  if(!list.length){showToast('미작성 건이 없습니다');return}
+  const names=list.map(ca=>{const k=kpis.find(x=>x.id===ca.kpi_id);return '· '+ca.record_year+'.'+ca.record_month+' '+k.kpi_name}).join('\n');
+  if(!confirm('품질팀 미달 '+list.length+'건에 고객사별 시정조치·개선활동 방향을 자동 입력합니다.\n(직접 작성한 건은 제외)\n\n'+names))return;
+  let ok=0,fail=0;
+  for(const ca of list){
+    const k=kpis.find(x=>x.id===ca.kpi_id);
+    const d=buildCa(k,ca.record_year,ca.record_month,ca.actual_value??((records.find(r=>r.kpi_id===k.id&&r.year===ca.record_year&&r.month===ca.record_month)||{}).actual_value),ca.target_value??getMonthTarget(k,ca.record_month));
+    if(!ca.responsible)d.responsible=k.dept||'';
+    try{await sbUpdate('kpi_corrective_action',ca.id,d);ok++}catch(e){fail++;console.error(e)}
+  }
+  caList=await sbSelect('kpi_corrective_action','order=id.desc');
+  renderCaList();renderCaStats();
+  showToast('✅ 자동입력 '+ok+'건'+(fail?' / 실패 '+fail+'건':''));
+};
+
+// 3) 모달 안 [고객사별 자동작성]
+window.qcaFillModal=function(){
+  const k=kpis.find(x=>x.id===parseInt(document.getElementById('caKpi').value));
+  if(!k){showToast('KPI를 먼저 선택하세요');return}
+  const c=document.getElementById('caCause'),a=document.getElementById('caAction');
+  const userText=v=>v.trim()&&!v.startsWith('[자동발행]')&&!v.startsWith(AUTO_MARK)&&!v.startsWith('■ 시정조치 내용');
+  if((userText(c.value)||userText(a.value))&&!confirm('작성된 내용을 자동작성 내용으로 바꿀까요?'))return;
+  const d=buildCa(k,parseInt(document.getElementById('caYear').value),parseInt(document.getElementById('caMonth').value),document.getElementById('caActual').value,document.getElementById('caTarget').value);
+  c.value=d.cause;a.value=d.action_plan;
+  const r=document.getElementById('caResp');if(r&&!r.value&&k.dept)r.value=k.dept;
+  if(!isQualityKpi(k))showToast('품질팀 외 항목 — 일반 양식으로 작성됨');
+};
+// 편집창 열 때 품질팀 미작성건이면 자동 채움
+const _open=openCaModal;
+openCaModal=function(data){
+  _open(data);
+  const k=data&&kpis.find(x=>x.id===data.kpi_id);
+  if(isQualityKpi(k)&&isPlaceholder(data.cause)&&isPlaceholder(data.action_plan)){
+    const d=buildCa(k,data.record_year,data.record_month,data.actual_value,data.target_value);
+    document.getElementById('caCause').value=d.cause;
+    document.getElementById('caAction').value=d.action_plan;
+  }
+};
+})();
+</script>
 
 </body></html>
