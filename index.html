@@ -2017,11 +2017,11 @@ async function saveAllRecords(){
   const m=parseInt(document.getElementById('recMonth').value);
   const vals=document.querySelectorAll('.rec-val');
   const notes=document.querySelectorAll('.rec-note');
-  const batch=[];
+  const batch=[],delIds=[];
   vals.forEach((inp,i)=>{
     const kpiId=parseInt(inp.dataset.kpiid);
     const v=inp.value.trim();
-    if(v==='')return;
+    if(v===''){const ex=records.find(r=>r.kpi_id===kpiId&&r.year===y&&r.month===m);if(ex)delIds.push(ex.id);return;}
     const k=kpis.find(x=>x.id===kpiId);
     const noteEl=notes[i];
     batch.push({
@@ -2033,13 +2033,18 @@ async function saveAllRecords(){
       note:noteEl?noteEl.value.trim():''
     });
   });
-  if(!batch.length){showToast('입력된 실적이 없습니다');return}
+  if(!batch.length&&!delIds.length){showToast('입력된 실적이 없습니다');return}
+  const nw=new Date(),curYM=nw.getFullYear()*100+nw.getMonth()+1;
+  if(batch.length&&y*100+m>=curYM&&!confirm('⚠ '+y+'년 '+m+'월은 아직 마감되지 않은 달입니다.\n전월('+(m===1?12:m-1)+'월) 실적을 입력하려던 것이 아닌지 확인하세요.\n\n그래도 '+m+'월로 저장할까요?'))return;
+  if(delIds.length&&!confirm(y+'년 '+m+'월 실적 칸을 비운 '+delIds.length+'건을 삭제할까요?\n(0으로 입력하면 삭제가 아니라 0으로 저장됩니다)'))return;
   try{
+    for(const id of delIds){await sbDelete('kpi_record',id)}
+    if(!batch.length){records=await sbSelect('kpi_record','order=year.desc,month.desc');loadRecKpis();showToast('🗑 '+delIds.length+'건 삭제');return}
     // 개별 upsert (conflict on kpi_id+year+month)
     for(const item of batch){
       await sbUpsert('kpi_record',item,'kpi_id,year,month');
     }
-    showToast('✅ '+batch.length+'건 저장 완료');
+    showToast('✅ '+batch.length+'건 저장'+(delIds.length?' / '+delIds.length+'건 삭제':''));
     records=await sbSelect('kpi_record','order=year.desc,month.desc');
     loadRecKpis();
     try{await mailOnRecordSave(y,m,batch.map(b=>b.kpi_id))}catch(e){console.error('메일 알람 실패:',e)}
@@ -4792,7 +4797,7 @@ function exportPerfSummary(){
 
 
 <script>
-/* ===== 품질팀 미달건 고객사별 시정조치 자동작성 (addon v1.1) ===== */
+/* ===== 품질팀 미달건 고객사별 시정조치 자동작성 (addon v1.2) ===== */
 (function(){
 const AUTO_MARK='【자동작성】';
 const MAT={TAEKYUNG:'SPCC',JEONGMIN:'C67S·S55CM',DONGIL:'STS304/430'};
@@ -4901,7 +4906,14 @@ sbInsert=async function(table,data){
       }
       return row;
     };
-    data=Array.isArray(data)?data.map(fix):fix(data);
+    const dup=row=>caList.some(c=>c.kpi_id===row.kpi_id&&c.record_year===row.record_year&&c.record_month===row.record_month);
+    if(Array.isArray(data)){
+      data=data.filter(r=>!dup(r)).map(fix);
+      if(!data.length)throw new Error('이미 발행된 시정조치입니다');
+    }else{
+      if(dup(data)&&!confirm(data.record_year+'년 '+data.record_month+'월 같은 KPI 시정조치가 이미 있습니다.\n중복으로 발행할까요?'))throw new Error('중복 발행 취소');
+      data=fix(data);
+    }
   }
   return _ins(table,data);
 };
@@ -4953,7 +4965,7 @@ openCaModal=function(data){
   }
 };
 
-/* ===== addon v1.1 : 조치결과·효과확인·종결 자동작성 (실적 데이터 기준) ===== */
+/* ===== addon v1.2 : 조치결과·효과확인·종결 자동작성 (실적 데이터 기준) ===== */
 const RES_MARK='■ 조치결과';
 function ymd(d){return d.toISOString().split('T')[0]}
 function lastDay(y,m){return new Date(Date.UTC(y,m,0))}
@@ -4962,7 +4974,9 @@ function evalEffect(k,ca){
   const y=ca.record_year,m=ca.record_month;
   const lines=['· 조치 전 ('+y+'.'+m+'): '+fmt(ca.actual_value)+' (목표 '+fmt(ca.target_value)+')'];
   let [yy,mm]=nextYM(y,m),ok=0,res='nodata',lastYM=null;
+  const _n=new Date(),_cur=_n.getFullYear()*100+_n.getMonth()+1;
   for(let i=0;i<3;i++){
+    if(yy*100+mm>=_cur)break; // 마감 전(당월·미래) 실적은 효과판정 제외
     const r=records.find(x=>x.kpi_id===k.id&&x.year===yy&&x.month===mm);
     if(!r||r.actual_value===null||r.actual_value===undefined||r.actual_value===''){break}
     const t=getMonthTarget(k,mm);
