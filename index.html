@@ -656,7 +656,7 @@ tr:hover td{background:#fafafa}
   <div class="card">
     <div class="card-tit" style="justify-content:space-between">
       <span>🔧 KPI 시정조치 관리</span>
-      <span style="display:flex;gap:6px"><button class="btn btn-sm" style="background:#6a1b9a;color:#fff" onclick="qcaFillAll()">✨ 품질팀 미달건 자동입력</button><button class="btn btn-sm btn-blue" onclick="openCaModal()">+ 시정조치 발행</button></span>
+      <span style="display:flex;gap:6px"><button class="btn btn-sm" style="background:#6a1b9a;color:#fff" onclick="qcaFillAll()">✨ 품질팀 미달건 자동입력</button><button class="btn btn-sm" style="background:#2e7d32;color:#fff" onclick="qcaCloseAll()">✅ 조치결과·종결 자동입력</button><button class="btn btn-sm btn-blue" onclick="openCaModal()">+ 시정조치 발행</button></span>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
       <select id="caFilterStatus" onchange="renderCaList()" style="flex:1;padding:7px;border:1px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:0">
@@ -1578,8 +1578,9 @@ CREATE POLICY "kpi_ca_all" ON kpi_corrective_action FOR ALL USING (true) WITH CH
       <div class="fg" style="flex:1"><label>담당자</label><select id="caResp" style="font-size:13px"></select></div>
       <div class="fg" style="flex:1"><label>완료기한</label><input type="date" id="caDue"></div>
     </div>
-    <div class="fg"><label>조치결과</label><textarea id="caResult" placeholder="실행한 조치 내용 및 결과" rows="2"></textarea></div>
-    <div class="fg"><label>효과확인</label><textarea id="caEffect" placeholder="조치 후 KPI 개선 여부, 데이터 근거" rows="2"></textarea></div>
+    <button type="button" class="btn btn-sm" style="background:#2e7d32;color:#fff;margin-bottom:8px;width:100%" onclick="qcaCloseModal()">✅ 조치결과·효과확인·종결 자동작성</button>
+    <div class="fg"><label>조치결과</label><textarea id="caResult" placeholder="실행한 조치 내용 및 결과" rows="5"></textarea></div>
+    <div class="fg"><label>효과확인</label><textarea id="caEffect" placeholder="조치 후 KPI 개선 여부, 데이터 근거" rows="5"></textarea></div>
     <div class="fg"><label>종결일</label><input type="date" id="caClose"></div>
     <div class="btn-row">
       <button class="btn btn-blue" onclick="saveCa()">💾 저장</button>
@@ -4791,7 +4792,7 @@ function exportPerfSummary(){
 
 
 <script>
-/* ===== 품질팀 미달건 고객사별 시정조치 자동작성 (addon v1.0) ===== */
+/* ===== 품질팀 미달건 고객사별 시정조치 자동작성 (addon v1.1) ===== */
 (function(){
 const AUTO_MARK='【자동작성】';
 const MAT={TAEKYUNG:'SPCC',JEONGMIN:'C67S·S55CM',DONGIL:'STS304/430'};
@@ -4950,6 +4951,92 @@ openCaModal=function(data){
     document.getElementById('caCause').value=d.cause;
     document.getElementById('caAction').value=d.action_plan;
   }
+};
+
+/* ===== addon v1.1 : 조치결과·효과확인·종결 자동작성 (실적 데이터 기준) ===== */
+const RES_MARK='■ 조치결과';
+function ymd(d){return d.toISOString().split('T')[0]}
+function lastDay(y,m){return new Date(Date.UTC(y,m,0))}
+function nextYM(y,m){m++;if(m>12){m=1;y++}return[y,m]}
+function evalEffect(k,ca){
+  const y=ca.record_year,m=ca.record_month;
+  const lines=['· 조치 전 ('+y+'.'+m+'): '+fmt(ca.actual_value)+' (목표 '+fmt(ca.target_value)+')'];
+  let [yy,mm]=nextYM(y,m),ok=0,res='nodata',lastYM=null;
+  for(let i=0;i<3;i++){
+    const r=records.find(x=>x.kpi_id===k.id&&x.year===yy&&x.month===mm);
+    if(!r||r.actual_value===null||r.actual_value===undefined||r.actual_value===''){break}
+    const t=getMonthTarget(k,mm);
+    const bad=worse(r.actual_value,t,k.direction);
+    lines.push('· '+yy+'.'+mm+': '+fmt(r.actual_value)+' (목표 '+fmt(t)+') → '+(bad?'미달':'달성'));
+    if(bad){res='fail';break}
+    ok++;lastYM=[yy,mm];
+    if(ok>=2){res='done';break}
+    [yy,mm]=nextYM(yy,mm);
+  }
+  if(res!=='done'&&res!=='fail')res=ok===1?'one':'nodata';
+  return{res,lines,lastYM};
+}
+function buildResult(k,ca){
+  const key=custKey(k.kpi_name);
+  const base=TPL[MAT[key]?'SUPPLIER':key]||TPL.DEFAULT;
+  const today=new Date();
+  let dd=ca.due_date?new Date(ca.due_date):today; if(dd>today)dd=today;
+  const acts=base.action.slice();
+  const cm=consecMiss(k,ca.record_year,ca.record_month);
+  if(cm>=2)acts.push('8D 대책서(특별불량 대책서) 발행 및 근본원인 분석');
+  const action_result=RES_MARK+' (조치완료 '+ymd(dd)+')\n'+acts.map((s,i)=>(i+1)+') '+s+' — 실시 완료').join('\n')+'\n\n※ 실시 근거(금형 수리이력·체크시트·교육일지 등) 첨부 필요';
+  const ev=evalEffect(k,ca);
+  const out={action_result};
+  if(ev.res==='done'){
+    let cd=lastDay(...nextYM(...ev.lastYM)); if(cd>today)cd=today;
+    out.effect_check='■ 효과확인\n'+ev.lines.join('\n')+'\n→ 2개월 연속 목표 달성, 조치 효과 있음 — 종결\n- 수평전개: 동일 유형 금형·기종 PFMEA/관리계획서 반영';
+    out.status='완료';out.close_date=ymd(cd);
+  }else if(ev.res==='one'){
+    out.effect_check='■ 효과확인\n'+ev.lines.join('\n')+'\n→ 1개월 달성, 익월 실적 확인 후 종결 예정';
+    out.status='효과확인';out.close_date=null;
+  }else if(ev.res==='fail'){
+    out.effect_check='■ 효과확인\n'+ev.lines.join('\n')+'\n→ 조치 후에도 목표 미달, 효과 미흡 — 원인 재분석 및 추가 조치 필요';
+    out.status='조치중';out.close_date=null;
+  }else{
+    out.effect_check='■ 효과확인\n'+ev.lines.join('\n')+'\n→ 조치 이후 실적 미입력, 실적 입력 후 확인';
+    out.status='효과확인';out.close_date=null;
+  }
+  out._res=ev.res;
+  return out;
+}
+window.qcaCloseAll=async function(){
+  const tgt=caList.filter(ca=>{const k=kpis.find(x=>x.id===ca.kpi_id);return isQualityKpi(k)&&ca.status!=='완료'&&(!ca.action_result||ca.action_result.startsWith(RES_MARK))});
+  if(!tgt.length){showToast('처리할 품질팀 미완료 건이 없습니다');return}
+  const plan=tgt.map(ca=>{
+    const k=kpis.find(x=>x.id===ca.kpi_id);
+    const d=buildResult(k,ca);
+    if(isPlaceholder(ca.cause)||isPlaceholder(ca.action_plan))Object.assign(d,buildCa(k,ca.record_year,ca.record_month,ca.actual_value,ca.target_value));
+    if(!ca.responsible)d.responsible=k.dept||'';
+    return{ca,k,d};
+  });
+  const lab={done:'✅ 종결',one:'🔵 효과확인(1개월 달성)',fail:'🟡 조치중(효과 미흡)',nodata:'🔵 효과확인(실적 없음)'};
+  const msg=plan.map(p=>lab[p.d._res]+'  '+p.ca.record_year+'.'+p.ca.record_month+' '+p.k.kpi_name).join('\n');
+  const nDone=plan.filter(p=>p.d._res==='done').length;
+  if(!confirm('품질팀 '+plan.length+'건 조치결과·효과확인을 입력합니다.\n종결은 조치 후 2개월 연속 목표 달성 건만 처리됩니다 ('+nDone+'건).\n\n'+msg))return;
+  let ok=0,fail=0;
+  for(const p of plan){const d=Object.assign({},p.d);delete d._res;
+    try{await sbUpdate('kpi_corrective_action',p.ca.id,d);ok++}catch(e){fail++;console.error(e)}}
+  caList=await sbSelect('kpi_corrective_action','order=id.desc');
+  renderCaList();renderCaStats();
+  showToast('✅ 입력 '+ok+'건 (종결 '+nDone+'건)'+(fail?' / 실패 '+fail+'건':''));
+};
+window.qcaCloseModal=function(){
+  const k=kpis.find(x=>x.id===parseInt(document.getElementById('caKpi').value));
+  if(!k){showToast('KPI를 먼저 선택하세요');return}
+  const ca={record_year:parseInt(document.getElementById('caYear').value),record_month:parseInt(document.getElementById('caMonth').value),
+    actual_value:document.getElementById('caActual').value,target_value:document.getElementById('caTarget').value,due_date:document.getElementById('caDue').value};
+  const r=document.getElementById('caResult'),e=document.getElementById('caEffect');
+  if(r.value.trim()&&!r.value.startsWith(RES_MARK)&&!confirm('작성된 조치결과를 바꿀까요?'))return;
+  const d=buildResult(k,ca);
+  r.value=d.action_result;e.value=d.effect_check;
+  document.getElementById('caStatus').value=d.status;
+  document.getElementById('caClose').value=d.close_date||'';
+  showToast({done:'2개월 연속 달성 — 종결 처리',one:'1개월 달성 — 효과확인 단계',fail:'조치 후에도 미달 — 조치중 유지',nodata:'조치 후 실적 없음 — 효과확인 단계'}[d._res]);
 };
 })();
 </script>
