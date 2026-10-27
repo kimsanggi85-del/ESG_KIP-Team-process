@@ -4990,17 +4990,39 @@ const DEPT_TPL={
 function deptKey(k){
   if(!k)return'ETC';
   const n=(k.kpi_name||'').replace(/\s/g,'');
-  const pn=((processes.find(p=>p.id===k.process_id)||{}).name||'')+' '+(typeof kpiDept==='function'?kpiDept(k):(k.dept||''));
+  const dept=(k.dept&&k.dept.trim())||(typeof kpiDept==='function'?kpiDept(k):'')||'';
+  const proc=(processes.find(p=>p.id===k.process_id)||{}).name||'';
+  // 안전·환경 KPI 는 담당부서(영업관리팀)와 무관하게 KPI 성격으로 판별
   if(/재해|아차|위험성|안전|보호구|산재/.test(n))return'EHS';
   if(/환경|전력|에너지|폐기물|화학|원단위/.test(n))return'ENV';
-  if(/품질/.test(pn)||/불량|Q-?COST|클레임|수입검사/i.test(n))return'QA';
-  if(/생산|제조|설비|보전/.test(pn)||/생산|가동|효율|보전|MTTR|MTBF/i.test(n))return'PROD';
-  if(/개발|설계|연구/.test(pn)||/개발|수주/.test(n))return'DEV';
-  if(/자재|구매|물류/.test(pn)||/협력사|공급사|재고/.test(n))return'MAT';
-  if(/안전|환경/.test(pn))return'EHS';
-  if(/영업|고객/.test(pn)||/매출|납기|고객/.test(n))return'SALES';
+  // 1순위: KPI 마스터의 담당부서  2순위: 프로세스명  3순위: KPI명 키워드
+  const byText=t=>{
+    if(!t)return'';
+    if(/품질/.test(t))return'QA';
+    if(/생산|제조|설비|보전/.test(t))return'PROD';
+    if(/개발|설계|연구|기술/.test(t))return'DEV';
+    if(/자재|구매|물류/.test(t))return'MAT';
+    if(/영업|고객|관리/.test(t))return'SALES';
+    if(/안전|환경/.test(t))return'EHS';
+    return'';
+  };
+  const r=byText(dept)||byText(proc);
+  if(r)return r;
+  if(/불량|Q-?COST|클레임|수입검사/i.test(n))return'QA';
+  if(/생산|가동|효율|보전|MTTR|MTBF/i.test(n))return'PROD';
+  if(/개발|수주/.test(n))return'DEV';
+  if(/협력사|공급사|재고/.test(n))return'MAT';
+  if(/매출|납기|고객/.test(n))return'SALES';
   return'ETC';
 }
+// 자동작성 문구인지 / 현재 부서 양식(v1.6 [부서] 표기)으로 작성됐는지
+function isAutoText(v){v=(v||'').trim();return v.startsWith(AUTO_MARK)||v.startsWith('■ 시정조치 내용')}
+function isStaleAuto(k,ca){
+  if(!k||!ca)return false;
+  if(!isAutoText(ca.cause)||!isAutoText(ca.action_plan))return false;
+  return (ca.cause||'').indexOf('['+tplFor(k).label+']')<0;
+}
+window.qcaIsStale=isStaleAuto;
 function isQualityKpi(k){return deptKey(k)==='QA'}
 // KPI 에 맞는 템플릿 선택 (품질: 고객사별 / 그 외: 부서 업무별)
 function tplFor(k){
@@ -5079,13 +5101,14 @@ sbInsert=async function(table,data){
 window.qcaFillAll=async function(){
   const tgt=caList.filter(ca=>{const k=kpis.find(x=>x.id===ca.kpi_id);return !!k&&ca.status!=='완료'});
   const empty=tgt.filter(ca=>isPlaceholder(ca.cause)||isPlaceholder(ca.action_plan));
-  const auto=tgt.filter(ca=>!empty.includes(ca)&&(ca.cause||'').startsWith(AUTO_MARK));
-  if(!empty.length&&!auto.length){showToast('자동입력할 미달건이 없습니다');return}
-  let list=empty;
-  if(auto.length&&confirm('이전에 자동작성된 '+auto.length+'건도 최신 내용으로 다시 작성할까요?\n(직접 수정한 내용이 있으면 [취소])'))list=empty.concat(auto);
+  const stale=tgt.filter(ca=>!empty.includes(ca)&&isStaleAuto(kpis.find(x=>x.id===ca.kpi_id),ca));
+  const auto=tgt.filter(ca=>!empty.includes(ca)&&!stale.includes(ca)&&(ca.cause||'').startsWith(AUTO_MARK));
+  if(!empty.length&&!stale.length&&!auto.length){showToast('자동입력할 미달건이 없습니다');return}
+  let list=empty.concat(stale);
+  if(auto.length&&confirm('현재 부서 양식으로 이미 자동작성된 '+auto.length+'건도 최신 내용으로 다시 작성할까요?\n(직접 수정한 내용이 있으면 [취소])'))list=list.concat(auto);
   if(!list.length){showToast('미작성 건이 없습니다');return}
   const names=list.map(ca=>{const k=kpis.find(x=>x.id===ca.kpi_id);return '· ['+tplFor(k).label+'] '+ca.record_year+'.'+ca.record_month+' '+k.kpi_name}).join('\n');
-  if(!confirm('미달 '+list.length+'건에 담당부서 업무에 맞는 시정조치·개선대책을 자동 입력합니다.\n(품질=고객사별, 생산·개발·자재·영업·안전환경=부서 업무별 / 직접 작성한 건은 제외)\n\n'+names))return;
+  if(!confirm('미달 '+list.length+'건에 담당부서 업무에 맞는 시정조치·개선대책을 자동 입력합니다.\n(품질=고객사별, 생산·개발·자재·영업·안전환경=부서 업무별 / 직접 작성한 건은 제외)'+(stale.length?'\n※ 이전 양식(타 부서 내용)으로 작성된 '+stale.length+'건 포함':'')+'\n\n'+names))return;
   let ok=0,fail=0;
   for(const ca of list){
     const k=kpis.find(x=>x.id===ca.kpi_id);
@@ -5115,10 +5138,11 @@ const _open=openCaModal;
 openCaModal=function(data){
   _open(data);
   const k=data&&kpis.find(x=>x.id===data.kpi_id);
-  if(k&&isPlaceholder(data.cause)&&isPlaceholder(data.action_plan)){
+  if(k&&((isPlaceholder(data.cause)&&isPlaceholder(data.action_plan))||isStaleAuto(k,data))){
     const d=buildCa(k,data.record_year,data.record_month,data.actual_value,data.target_value);
     document.getElementById('caCause').value=d.cause;
     document.getElementById('caAction').value=d.action_plan;
+    if(isStaleAuto(k,data))showToast('이전 양식 자동작성 건 → '+tplFor(k).label+' 양식으로 다시 작성됨 (저장 필요)');
   }
 };
 
