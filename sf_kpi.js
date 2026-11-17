@@ -134,14 +134,8 @@
 
   async function production(k, y, m, L) {
     const nm = norm(k.kpi_name), ym = ymOf(y, m);
-    // MTTR (분) = MES '설비이상' 정지시간 합 ÷ 건수 — 낮을수록 좋음 (2026-11-17 결정: 달성률 아닌 MTTR 분 자체, 목표 15분)
-    if (/MTTR/i.test(nm)) {
-      const D = await L.downtime(y, m);
-      let n = 0, mins = 0;
-      D.forEach(d => (d.stop_events || []).forEach(e => { if (e && e.name === '설비이상') { n++; mins += +e.min || 0; } }));
-      if (!D.length) return { skip: 'MES 정지기록에 ' + ym + ' 자료 없음' };
-      return { val: n ? r1(mins / n) : 0, note: '설비이상 ' + n + '건 · ' + fmt(Math.round(mins)) + '분 (MES 정지기록)', src: 'MES 정지기록' };
-    }
+    // MTTR: 보전 수리 기록 기준으로 직접 입력 (2026-11-17 결정 A안 — MES '설비이상' 짧은 정지까지 포함되어 기존 기준과 달라 자동 산출 안 함)
+    if (/MTTR/i.test(nm)) return { skip: 'MTTR — 보전 수리 기록 기준 직접 입력' };
     // 예방보전 준수 (%) = 그 달 정기점검 계획 금형 중 그 달 점검 실시 비율 (금형 정기점검 앱)
     if (/예방보전/.test(nm)) {
       const M = await L.mold(), plan = M.plan || {}, hist = M.hist || [];
