@@ -52,6 +52,16 @@
         const del = j.del || {};
         return { recs: (j.recs || []).filter(r => r && r.date && !del[r.id]), master: j.master || {}, ua: j.ua };
       }),
+      // 설비 정지 기록 (MES 정지코드) — MTTR
+      downtime: (y, m) => once('d' + ymOf(y, m), () => {
+        const next = m === 12 ? (y + 1) + '-01-01' : ymOf(y, m + 1) + '-01';
+        return get('daily_downtime?select=ymd,machine_name,stop_events&ymd=gte.' + ymOf(y, m) + '-01&ymd=lt.' + next + '&limit=5000');
+      }),
+      // 금형 정기점검 계획·이력 — 예방보전 준수
+      mold: () => once('m', async () => {
+        const v = await get('kv_store?key=eq.mold_periodic_v1&select=plan:value->plan,hist:value->hist');
+        return (v[0]) || { plan: {}, hist: [] };
+      }),
     };
   }
 
@@ -123,7 +133,24 @@
   }
 
   async function production(k, y, m, L) {
-    const nm = norm(k.kpi_name), P = await L.prod(), ym = ymOf(y, m);
+    const nm = norm(k.kpi_name), ym = ymOf(y, m);
+    // MTTR (분) = MES '설비이상' 정지시간 합 ÷ 건수 — 낮을수록 좋음 (2026-11-17 결정: 달성률 아닌 MTTR 분 자체, 목표 15분)
+    if (/MTTR/i.test(nm)) {
+      const D = await L.downtime(y, m);
+      let n = 0, mins = 0;
+      D.forEach(d => (d.stop_events || []).forEach(e => { if (e && e.name === '설비이상') { n++; mins += +e.min || 0; } }));
+      if (!D.length) return { skip: 'MES 정지기록에 ' + ym + ' 자료 없음' };
+      return { val: n ? r1(mins / n) : 0, note: '설비이상 ' + n + '건 · ' + fmt(Math.round(mins)) + '분 (MES 정지기록)', src: 'MES 정지기록' };
+    }
+    // 예방보전 준수 (%) = 그 달 정기점검 계획 금형 중 그 달 점검 실시 비율 (금형 정기점검 앱)
+    if (/예방보전/.test(nm)) {
+      const M = await L.mold(), plan = M.plan || {}, hist = M.hist || [];
+      const due = Object.keys(plan).filter(pn => (plan[pn] || []).map(Number).includes(m));
+      if (!due.length) return { skip: ym + ' 정기점검 계획 금형 없음' };
+      const done = due.filter(pn => hist.some(h => h && h['품번'] === pn && String(h['점검일'] || '').slice(0, 7) === ym));
+      return { val: r1(done.length / due.length * 100), note: '정기점검 계획 ' + due.length + '건 중 실시 ' + done.length + '건 (금형 정기점검)', src: '금형 정기점검' };
+    }
+    const P = await L.prod();
     const R = P.recs.filter(r => r.date.slice(0, 7) === ym);
     if (!R.length) return { skip: '생산일보에 ' + ym + ' 자료 없음' };
     const T = monthStats(R), src = '생산일보';
@@ -134,9 +161,6 @@
     }
     if (/가동률/.test(nm)) return { val: r1(T.oper * 100), note: T.days + '일 평균 (가동시간 ÷ 실근무)', src };
     if (/^효률$/.test(nm) || /생산효률|설비효률/.test(nm)) return { val: r1(T.eff * 100), note: T.days + '일 평균 (실적 ÷ 가능수량)', src };
-    // MTTR 달성률: 기존 입력값(100 전후, 높을수록 좋음)과 KPI 가이드 산식(실제 ÷ 목표 × 100)이 맞지 않아 산식 확정 전까지 자동 산출하지 않는다
-    if (/MTTR/i.test(nm)) return { skip: 'MTTR 산식 확인 전 — 직접 입력' };
-    if (/예방보전/.test(nm)) return { skip: '보전 계획 건수 자료 없음 — 직접 입력' };
     return null;
   }
 
