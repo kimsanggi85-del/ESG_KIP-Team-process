@@ -134,12 +134,9 @@
     }
     if (/가동률/.test(nm)) return { val: r1(T.oper * 100), note: T.days + '일 평균 (가동시간 ÷ 실근무)', src };
     if (/^효률$/.test(nm) || /생산효률|설비효률/.test(nm)) return { val: r1(T.eff * 100), note: T.days + '일 평균 (실적 ÷ 가능수량)', src };
-    if (/MTTR/i.test(nm)) {
-      const tgt = +((P.master.relTgt || {}).r) || 60;
-      if (!T.f) return { val: 0, note: '설비고장 0건 (목표 ' + tgt + '분)', src };
-      const mttr = T.fm / T.f;
-      return { val: r1(mttr / tgt * 100), note: 'MTTR ' + r1(mttr) + '분 ÷ 목표 ' + tgt + '분 (고장 ' + T.f + '건 · ' + fmt(T.fm) + '분)', src };
-    }
+    // MTTR 달성률: 기존 입력값(100 전후, 높을수록 좋음)과 KPI 가이드 산식(실제 ÷ 목표 × 100)이 맞지 않아 산식 확정 전까지 자동 산출하지 않는다
+    if (/MTTR/i.test(nm)) return { skip: 'MTTR 산식 확인 전 — 직접 입력' };
+    if (/예방보전/.test(nm)) return { skip: '보전 계획 건수 자료 없음 — 직접 입력' };
     return null;
   }
 
