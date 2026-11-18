@@ -135,12 +135,11 @@
 
   async function production(k, y, m, L) {
     const nm = norm(k.kpi_name), ym = ymOf(y, m);
-    // MTTR: 보전 수리 기록 기준으로 직접 입력 (2026-11-17 결정 A안 — MES '설비이상' 짧은 정지까지 포함되어 기존 기준과 달라 자동 산출 안 함)
     // MTTR 달성률(%) = 목표 120분 ÷ 실평균수리시간 × 100, 상한 100% (2026-11-18 결정)
     //   실평균수리시간 = 생산일보 고장정지(분) ÷ 설비고장 건수 — 1~8월 직접 입력값과 같은 경향
-    //   KPI 단위가 %가 아니면(분 단위 MTTR) 계산하지 않고 직접 입력
+    //   KPI 설정 단위가 %일 때만 등록 (분 단위로 설정돼 있으면 달성률 값이 분으로 읽히므로 건너뜀)
     if (/MTTR/i.test(nm)) {
-      if (!/%/.test(String(k.unit || '')) && !/달성/.test(nm)) return { skip: 'MTTR(' + (k.unit || '단위 없음') + ') — 달성률(%) KPI가 아니라 직접 입력' };
+      if (!/%/.test(String(k.unit || ''))) return { skip: 'KPI 단위가 ' + (k.unit || '없음') + ' — 설정에서 단위 %·높을수록 좋음·목표 100으로 바꾸면 자동 등록' };
       const P0 = await L.prod();
       const R0 = P0.recs.filter(r => r.date.slice(0, 7) === ym);
       if (!R0.length) return { skip: '생산일보에 ' + ym + ' 자료 없음' };
