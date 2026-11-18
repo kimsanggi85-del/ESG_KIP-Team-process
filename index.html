@@ -512,7 +512,7 @@ tr:hover td{background:#fafafa}
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 10px;padding:8px 10px;background:#e3f2fd;border:1px solid #90caf9;border-radius:6px">
       <button class="btn btn-sm btn-blue" onclick="sfFillKpis()" style="font-size:12px">🔄 품질·생산 실적 SmartFactory에서 불러오기</button>
-      <span style="font-size:10.5px;color:#0d47a1;line-height:1.4">품질(공정불량률·수입검사·Q-cost)과 생산(계획달성률·가동률·효율·MTTR)을 선택한 년/월 기준으로 채웁니다. 확인 후 [💾 전체 저장]을 눌러야 저장됩니다.</span>
+      <span style="font-size:10.5px;color:#0d47a1;line-height:1.4">품질(공정불량률·수입검사·Q-cost)과 생산(계획달성률·가동률·효율·예방보전·MTTR 달성률)을 선택한 년/월 기준으로 채웁니다. 확인 후 [💾 전체 저장]을 눌러야 저장됩니다.</span>
     </div>
     <div id="recBody"><div style="font-size:13px;font-weight:700;color:#0d47a1;padding:6px 0;border-bottom:2px solid #e3f2fd;margin-bottom:6px;margin-top:8px">🏢 품질관리</div><div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0" data-kpiid="250">
         <div style="flex:2;min-width:0;font-size:12px"><div style="font-weight:600">사내공정불량률(SKF SBC)</div><div style="font-size:10px;color:#888">목표:2000 PPM</div></div>
@@ -1682,7 +1682,7 @@ const KPI_GUIDE={
   '설비 가동률':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'설비 가동률 관리.\n\n산출식: (가동시간 / 전체가동시간) × 100\n\n근거자료: 생산팀 작업일보, 설비조치 내역서'},
   '효율':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'설비 효율 관리.\n\n산출식: 가동률 대비 생산효율\n\n근거자료: 생산팀 작업일보'},
   '예방보전 준수':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'예방보전 계획 대비 실행률.\n\n산출식: (보전실적건수 / 보전계획건수) × 100\n설비일일점검 + 설비월간점검 + 금형정기점검\n\n근거자료: 예방보전 계획서, 보전 실적대장'},
-  'MTTR 달성률':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'평균수리시간(MTTR) 관리.\n\n산출식: (실평균수리시간 / 목표시간) × 100\n\n근거자료: 설비별 조치현황보고'},
+  'MTTR 달성률':{clause:'8.5.1.5 TPM',dept:'생산팀',method:'평균수리시간(MTTR) 관리.\n\n산출식: (목표시간 120분 / 실평균수리시간) × 100, 상한 100%\n실평균수리시간 = 고장정지시간 ÷ 설비고장 건수 (생산일보)\n\n근거자료: 설비별 조치현황보고'},
   '개발수주 달성률':{clause:'8.3 제품 및 서비스의 설계와 개발',dept:'개발팀',method:'개발 수주계획 대비 실적 달성률.\n\n산출식: (수주실적 / 수주계획) × 100\nRFQ접수 및 견적대응 / 개발 착수 건수\n\n근거자료: 수주 실적 관리대장'},
   '개발완료 달성률':{clause:'8.3 제품 및 서비스의 설계와 개발',dept:'개발팀',method:'개발 완료계획 대비 실적 달성률.\n\n산출식: (개발완료실적 / 개발완료계획) × 100\n견적 및 개발계획 / 개발 완료 현황\n\n근거자료: 개발 프로젝트 관리대장'},
   '매출달성율':{clause:'9.1 모니터링, 측정, 분석 및 평가',dept:'영업팀',method:'매출 목표 대비 실적 달성률.\n\n산출식: (매출실적 / 매출계획) × 100\n\n근거자료: 영업계획, 영업실적 보고서'},
