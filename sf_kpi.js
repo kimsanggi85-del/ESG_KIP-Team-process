@@ -22,6 +22,7 @@
   const fmt = n => Number(n || 0).toLocaleString('ko-KR');
   const r1 = v => Math.round(v * 10) / 10;
   const ymOf = (y, m) => y + '-' + String(m).padStart(2, '0');
+  const MTTR_TGT = 120;   // MTTR 목표시간(분) — MTTR 달성률 = 목표 ÷ 실평균수리시간 × 100 (상한 100%)
 
   /* 부서 구분 — 프로세스명 또는 담당부서 */
   function deptOf(k, processes) {
@@ -135,7 +136,19 @@
   async function production(k, y, m, L) {
     const nm = norm(k.kpi_name), ym = ymOf(y, m);
     // MTTR: 보전 수리 기록 기준으로 직접 입력 (2026-11-17 결정 A안 — MES '설비이상' 짧은 정지까지 포함되어 기존 기준과 달라 자동 산출 안 함)
-    if (/MTTR/i.test(nm)) return { skip: 'MTTR — 보전 수리 기록 기준 직접 입력' };
+    // MTTR 달성률(%) = 목표 120분 ÷ 실평균수리시간 × 100, 상한 100% (2026-11-18 결정)
+    //   실평균수리시간 = 생산일보 고장정지(분) ÷ 설비고장 건수 — 1~8월 직접 입력값과 같은 경향
+    //   KPI 단위가 %가 아니면(분 단위 MTTR) 계산하지 않고 직접 입력
+    if (/MTTR/i.test(nm)) {
+      if (!/%/.test(String(k.unit || '')) && !/달성/.test(nm)) return { skip: 'MTTR(' + (k.unit || '단위 없음') + ') — 달성률(%) KPI가 아니라 직접 입력' };
+      const P0 = await L.prod();
+      const R0 = P0.recs.filter(r => r.date.slice(0, 7) === ym);
+      if (!R0.length) return { skip: '생산일보에 ' + ym + ' 자료 없음' };
+      const T0 = monthStats(R0);
+      if (!T0.f) return { val: 100, note: '설비고장 0건 (목표 ' + MTTR_TGT + '분)', src: '생산일보' };
+      const mttr = T0.fm / T0.f, raw = MTTR_TGT / mttr * 100;
+      return { val: r1(Math.min(100, raw)), note: 'MTTR ' + r1(mttr) + '분 (고장 ' + T0.f + '건 · ' + fmt(T0.fm) + '분) · 목표 ' + MTTR_TGT + '분' + (raw > 100 ? ' · 계산 ' + r1(raw) + '% → 상한 100%' : ''), src: '생산일보' };
+    }
     // 예방보전 준수 (%) = 그 달 정기점검 계획 금형 중 그 달 점검 실시 비율 (금형 정기점검 앱)
     if (/예방보전/.test(nm)) {
       const M = await L.mold(), plan = M.plan || {}, hist = M.hist || [];

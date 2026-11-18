@@ -38,6 +38,7 @@ async function main() {
   const procs = await kp('kpi_process?select=id,name');
   const kpis = (await kp('kpi_master?select=*&is_active=eq.true')).filter(k => DEPTS.includes(deptOf(k, procs)));
   console.log('대상 KPI', kpis.length, '개 (' + DEPTS.join('·') + ')', DRY ? '— DRY_RUN' : '');
+  kpis.forEach(k => console.log('  ·', k.id, k.kpi_name, '| 단위', k.unit, '| 목표', k.target_value, '| 경고', k.alert_value, '|', k.direction));
   const L = loader();
   const now = new Date(Date.now() + 9 * 3600e3);
   let saved = 0, kept = 0, same = 0, skipped = 0;
