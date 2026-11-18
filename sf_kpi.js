@@ -191,7 +191,8 @@
 
   /* ---------- KPI관리 DB 등록 (자동 등록 작업 · 월마감 연동 공용) ----------
      규칙: 직접 입력한 실적(비고가 [SF]로 시작하지 않음)은 덮어쓰지 않는다. [SF] 자동 등록분만 갱신.
-     opt: { months:[[y,m],...], depts:['Q','P'], dry:false, log:fn } → { saved, same, kept, skipped, lines } */
+     opt: { months:[[y,m],...], depts:['Q','P'], dry:false, log:fn, force:['259@2026-09'] } → { saved, same, kept, skipped, lines }
+     force: 'KPI번호@년-월' 목록 — 사용자가 지정한 칸만 직접 입력값이어도 계산값으로 덮어씀 */
   const KPI_URL = 'https://pwunfmpddkpymcnfiitn.supabase.co';
   const KPI_KEY = 'sb_publishable_PkmIYbQfhxzVubz-sV_UHQ_OOGByUmi';
   async function kp(p, opt) {
@@ -211,6 +212,7 @@
   }
   async function register(opt) {
     const depts = opt.depts || ['Q', 'P'], dry = !!opt.dry, log = opt.log || (() => {});
+    const force = new Set((opt.force || []).map(x => String(x).trim()).filter(Boolean));
     const procs = await kp('kpi_process?select=id,name');
     const kpis = (await kp('kpi_master?select=*&is_active=eq.true')).filter(k => depts.includes(deptOf(k, procs)));
     log('대상 KPI ' + kpis.length + '개 (' + depts.join('·') + ')' + (dry ? ' — DRY_RUN' : ''));
@@ -226,9 +228,10 @@
         if (!r) continue;
         if (r.skip) { out(ym + ' ' + k.kpi_name + ' — 건너뜀: ' + r.skip); res.skipped++; continue; }
         const ex = recs.find(x => x.kpi_id === k.id), note = '[SF] ' + r.note;
-        if (ex && !String(ex.note || '').startsWith('[SF]')) { res.kept++; out(ym + ' ' + k.kpi_name + ' — 직접 입력값 ' + ex.actual_value + ' 유지 (계산값 ' + r.val + ' | ' + r.note + ')'); continue; }
+        const forced = force.has(k.id + '@' + ym);
+        if (ex && !forced && !String(ex.note || '').startsWith('[SF]')) { res.kept++; out(ym + ' ' + k.kpi_name + ' — 직접 입력값 ' + ex.actual_value + ' 유지 (계산값 ' + r.val + ' | ' + r.note + ')'); continue; }
         if (ex && Number(ex.actual_value) === r.val && ex.note === note) { res.same++; continue; }
-        out(ym + ' ' + k.kpi_name + ' : ' + (ex ? ex.actual_value : '(없음)') + ' → ' + r.val + ' | ' + r.note);
+        out(ym + ' ' + k.kpi_name + ' : ' + (ex ? ex.actual_value : '(없음)') + ' → ' + r.val + ' | ' + r.note + (forced && ex && !String(ex.note || '').startsWith('[SF]') ? '  ※ 지정 덮어쓰기' : ''));
         if (dry) continue;
         await kp('kpi_record?on_conflict=kpi_id,year,month', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
           body: JSON.stringify({ kpi_id: k.id, year: y, month: m, actual_value: r.val, target_value: monthTarget(k, m), note }) });
