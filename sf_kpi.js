@@ -11,7 +11,7 @@
   const DEF_PLAN = {
     '2026-01': { tgt: 4090405 }, '2026-02': { tgt: 2961398 }, '2026-03': { tgt: 3641812 }, '2026-04': { tgt: 4272315 },
     '2026-05': { tgt: 3555827 }, '2026-06': { tgt: 3624371 }, '2026-07': { tgt: 4719215 }, '2026-08': { tgt: 3601568 },
-    '2026-09': { tgt: 3200000 }, '2026-10': { tgt: 3000000 } };   // 09·10: MES 목표수량 (2026-11-18 입력)
+    '2026-09': { tgt: 3791427 }, '2026-10': { tgt: 4400703 } };   // 09·10: MES 생산계획 대비 실적 엑셀 — 실적 있는 작업지시의 계획수량 합
 
   async function get(path) {
     const r = await fetch(SF_URL + '/rest/v1/' + path, { headers: { apikey: SF_KEY, Authorization: 'Bearer ' + SF_KEY, Accept: 'application/json' } });
@@ -48,7 +48,7 @@
         const next = m === 12 ? (y + 1) + '-01-01' : ymOf(y, m + 1) + '-01';
         return get('iqc_inspections?select=supplier,final_judge,insp_date&insp_date=gte.' + ymOf(y, m) + '-01&insp_date=lt.' + next + '&limit=5000');
       }),
-      // MES 작업지시 월 계획수량 (MES 관리 도구가 작업지시 저장 때 올림)
+      // MES 작업지시 월 계획수량 — 실적 있는 작업지시의 계획수량 합 (MES 관리 도구가 작업지시 저장·조회 때 올림)
       mesPlan: () => once('mp', async () => {
         const v = await get('kv_store?key=eq.tj_mes_plan_month_v1&select=value');
         return ((v[0] && v[0].value) || {}).months || {};
@@ -167,7 +167,7 @@
     if (!R.length) return { skip: '생산일보에 ' + ym + ' 자료 없음' };
     const T = monthStats(R), src = '생산일보';
     if (/계획/.test(nm) && /달성/.test(nm)) {
-      // 목표수량 우선순위: 생산일보 월 생산계획(직접 입력) → DEF_PLAN → MES 작업지시 월 계획수량 합계
+      // 목표수량 우선순위: 생산일보 월 생산계획(직접 입력) → DEF_PLAN → MES 작업지시 계획수량 합계(실적 있는 작업지시만)
       const own = ((P.master.plan || {})[ym]) || {}, mp = (await L.mesPlan())[ym] || {};
       let tgt = +own.tgt, from = '생산일보 월 생산계획';
       if (!tgt) { tgt = +(DEF_PLAN[ym] || {}).tgt; from = '목표수량'; }
