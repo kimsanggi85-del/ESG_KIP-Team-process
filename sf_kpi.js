@@ -7,11 +7,12 @@
 (function (G) {
   const SF_URL = 'https://omngtyewdaqpphnzeate.supabase.co';
   const SF_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tbmd0eWV3ZGFxcHBobnplYXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODk4ODksImV4cCI6MjA5MDQ2NTg4OX0.Zxur3t02JHtOcXforCMSwO3i2mMaf5sViE0tXXUC0-s';
-  // 월 MES 목표수량 — 01~08은 생산일보 앱 DEF_PLAN, 09~10은 직접 받은 값. 생산일보 기준정보(master.plan)에 입력하면 그 값이 우선
+  // 월 목표수량 = MES 작업지시 중 실적이 있는 지시의 계획수량 합 (MES '생산계획 대비 실적' 1~10월 엑셀에서 계산)
+  //   생산일보 월 생산계획(master.plan)에 직접 넣은 값이 있으면 그 값이 우선
   const DEF_PLAN = {
-    '2026-01': { tgt: 4090405 }, '2026-02': { tgt: 2961398 }, '2026-03': { tgt: 3641812 }, '2026-04': { tgt: 4272315 },
-    '2026-05': { tgt: 3555827 }, '2026-06': { tgt: 3624371 }, '2026-07': { tgt: 4719215 }, '2026-08': { tgt: 3601568 },
-    '2026-09': { tgt: 3791427 }, '2026-10': { tgt: 4400703 } };   // 09·10: MES 생산계획 대비 실적 엑셀 — 실적 있는 작업지시의 계획수량 합
+    '2026-01': { tgt: 4873689 }, '2026-02': { tgt: 3631122 }, '2026-03': { tgt: 4240161 }, '2026-04': { tgt: 4757562 },
+    '2026-05': { tgt: 4119768 }, '2026-06': { tgt: 4447413 }, '2026-07': { tgt: 5183244 }, '2026-08': { tgt: 3987495 },
+    '2026-09': { tgt: 3791427 }, '2026-10': { tgt: 4400703 } };
 
   async function get(path) {
     const r = await fetch(SF_URL + '/rest/v1/' + path, { headers: { apikey: SF_KEY, Authorization: 'Bearer ' + SF_KEY, Accept: 'application/json' } });
