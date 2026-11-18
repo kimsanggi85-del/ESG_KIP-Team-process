@@ -7,10 +7,11 @@
 (function (G) {
   const SF_URL = 'https://omngtyewdaqpphnzeate.supabase.co';
   const SF_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tbmd0eWV3ZGFxcHBobnplYXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODk4ODksImV4cCI6MjA5MDQ2NTg4OX0.Zxur3t02JHtOcXforCMSwO3i2mMaf5sViE0tXXUC0-s';
-  // 생산일보 앱(Daily-Production-Report) DEF_PLAN — 2026-01~08 MES 목표수량. 그 뒤는 생산일보 기준정보(master.plan)
+  // 월 MES 목표수량 — 01~08은 생산일보 앱 DEF_PLAN, 09~10은 직접 받은 값. 생산일보 기준정보(master.plan)에 입력하면 그 값이 우선
   const DEF_PLAN = {
     '2026-01': { tgt: 4090405 }, '2026-02': { tgt: 2961398 }, '2026-03': { tgt: 3641812 }, '2026-04': { tgt: 4272315 },
-    '2026-05': { tgt: 3555827 }, '2026-06': { tgt: 3624371 }, '2026-07': { tgt: 4719215 }, '2026-08': { tgt: 3601568 } };
+    '2026-05': { tgt: 3555827 }, '2026-06': { tgt: 3624371 }, '2026-07': { tgt: 4719215 }, '2026-08': { tgt: 3601568 },
+    '2026-09': { tgt: 3200000 }, '2026-10': { tgt: 3000000 } };   // 09·10: MES 목표수량 (2026-11-18 입력)
 
   async function get(path) {
     const r = await fetch(SF_URL + '/rest/v1/' + path, { headers: { apikey: SF_KEY, Authorization: 'Bearer ' + SF_KEY, Accept: 'application/json' } });
