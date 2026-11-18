@@ -13,6 +13,9 @@ on:
       depts:
         description: '대상 부서 (Q=품질, P=생산)'
         default: 'Q,P'
+      force:
+        description: '직접 입력값이어도 덮어쓸 칸 (KPI번호@년-월, 쉼표로 여러 개. 예 259@2026-09)'
+        default: ''
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -26,3 +29,4 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run || '0' }}
           MONTHS_BACK: ${{ github.event.inputs.months_back || '2' }}
           DEPTS: ${{ github.event.inputs.depts || 'Q,P' }}
+          FORCE: ${{ github.event.inputs.force || '' }}

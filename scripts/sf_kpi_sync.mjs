@@ -22,5 +22,6 @@ globalThis.SFKPI.register({
   months,
   depts: (process.env.DEPTS || 'Q,P').split(','),
   dry: process.env.DRY_RUN === '1',
+  force: (process.env.FORCE || '').split(','),
   log: s => console.log(s),
 }).catch(e => { console.error(e); process.exit(1); });
