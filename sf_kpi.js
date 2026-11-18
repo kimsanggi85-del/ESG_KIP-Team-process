@@ -142,7 +142,7 @@
   async function production(k, y, m, L) {
     const nm = norm(k.kpi_name), ym = ymOf(y, m);
     // MTTR 달성률(%) = 목표 120분 ÷ 실평균수리시간 × 100, 상한 100% (2026-11-18 결정)
-    //   실평균수리시간 = 생산일보 고장정지(분) ÷ 설비고장 건수 — 1~8월 직접 입력값과 같은 경향
+    //   실평균수리시간 = 생산일보 고장정지 fm(분) ÷ 설비고장 건수 fcnt — 1~8월 직접 입력값과 같은 경향
     //   KPI 설정 단위가 %일 때만 등록 (분 단위로 설정돼 있으면 달성률 값이 분으로 읽히므로 건너뜀)
     if (/MTTR/i.test(nm)) {
       if (!/%/.test(String(k.unit || ''))) return { skip: 'KPI 단위가 ' + (k.unit || '없음') + ' — 설정에서 단위 %·높을수록 좋음·목표 100으로 바꾸면 자동 등록' };
@@ -150,7 +150,12 @@
       const R0 = P0.recs.filter(r => r.date.slice(0, 7) === ym);
       if (!R0.length) return { skip: '생산일보에 ' + ym + ' 자료 없음' };
       const T0 = monthStats(R0);
-      if (!T0.f) return { val: 100, note: '설비고장 0건 (목표 ' + MTTR_TGT + '분)', src: '생산일보' };
+      if (!T0.f) {
+        // 고장건수·fm(고장정지 분)이 비어 있는데 정지사유에 설비이상이 있으면 입력 누락 — 100%로 넣지 않음
+        const miss = R0.filter(r => /설비이상/.test(String(r.sr || '') + String(r.note || ''))).length;
+        if (miss) return { skip: '생산일보 고장건수·고장정지(fm) 미입력 — 정지사유에 설비이상 ' + miss + '건' };
+        return { val: 100, note: '설비고장 0건 (목표 ' + MTTR_TGT + '분)', src: '생산일보' };
+      }
       const mttr = T0.fm / T0.f, raw = MTTR_TGT / mttr * 100;
       return { val: r1(Math.min(100, raw)), note: 'MTTR ' + r1(mttr) + '분 (고장 ' + T0.f + '건 · ' + fmt(T0.fm) + '분) · 목표 ' + MTTR_TGT + '분' + (raw > 100 ? ' · 계산 ' + r1(raw) + '% → 상한 100%' : ''), src: '생산일보' };
     }
