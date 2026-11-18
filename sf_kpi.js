@@ -178,5 +178,56 @@
     return null;
   }
 
-  G.SFKPI = { SF_URL, loader, computeKpi, deptOf, monthStats, calc };
+
+  /* ---------- KPI관리 DB 등록 (자동 등록 작업 · 월마감 연동 공용) ----------
+     규칙: 직접 입력한 실적(비고가 [SF]로 시작하지 않음)은 덮어쓰지 않는다. [SF] 자동 등록분만 갱신.
+     opt: { months:[[y,m],...], depts:['Q','P'], dry:false, log:fn } → { saved, same, kept, skipped, lines } */
+  const KPI_URL = 'https://pwunfmpddkpymcnfiitn.supabase.co';
+  const KPI_KEY = 'sb_publishable_PkmIYbQfhxzVubz-sV_UHQ_OOGByUmi';
+  async function kp(p, opt) {
+    opt = opt || {};
+    const r = await fetch(KPI_URL + '/rest/v1/' + p, Object.assign({}, opt, {
+      headers: Object.assign({ apikey: KPI_KEY, Authorization: 'Bearer ' + KPI_KEY, 'Content-Type': 'application/json', Accept: 'application/json' }, opt.headers || {}) }));
+    const t = await r.text();
+    if (!r.ok) throw new Error('KPI관리 ' + p.split('?')[0] + ' ' + r.status + ' ' + t.slice(0, 200));
+    return t ? JSON.parse(t) : null;
+  }
+  // KPI 화면 getMonthTarget 과 같은 규칙: monthly_targets 우선
+  function monthTarget(k, m) {
+    let o = k.monthly_targets;
+    if (typeof o === 'string') { try { o = JSON.parse(o); } catch (e) { o = null; } }
+    const v = o && (o[m] != null ? o[m] : o[String(m)]);
+    return v !== undefined && v !== null && v !== '' ? Number(v) : (k.target_value != null ? k.target_value : null);
+  }
+  async function register(opt) {
+    const depts = opt.depts || ['Q', 'P'], dry = !!opt.dry, log = opt.log || (() => {});
+    const procs = await kp('kpi_process?select=id,name');
+    const kpis = (await kp('kpi_master?select=*&is_active=eq.true')).filter(k => depts.includes(deptOf(k, procs)));
+    log('대상 KPI ' + kpis.length + '개 (' + depts.join('·') + ')' + (dry ? ' — DRY_RUN' : ''));
+    kpis.forEach(k => log('  · ' + k.id + ' ' + k.kpi_name + ' | 단위 ' + k.unit + ' | 목표 ' + k.target_value + ' | 경고 ' + k.alert_value + ' | ' + k.direction));
+    const L = loader(), res = { saved: 0, same: 0, kept: 0, skipped: 0, lines: [] };
+    const out = s => { res.lines.push(s); log(s); };
+    for (const [y, m] of opt.months) {
+      const ym = ymOf(y, m);
+      const recs = await kp('kpi_record?select=id,kpi_id,actual_value,note&year=eq.' + y + '&month=eq.' + m);
+      for (const k of kpis) {
+        let r;
+        try { r = await computeKpi(k, y, m, L, procs); } catch (e) { out(ym + ' ' + k.kpi_name + ' — 오류 ' + e.message); res.skipped++; continue; }
+        if (!r) continue;
+        if (r.skip) { out(ym + ' ' + k.kpi_name + ' — 건너뜀: ' + r.skip); res.skipped++; continue; }
+        const ex = recs.find(x => x.kpi_id === k.id), note = '[SF] ' + r.note;
+        if (ex && !String(ex.note || '').startsWith('[SF]')) { res.kept++; out(ym + ' ' + k.kpi_name + ' — 직접 입력값 ' + ex.actual_value + ' 유지 (계산값 ' + r.val + ' | ' + r.note + ')'); continue; }
+        if (ex && Number(ex.actual_value) === r.val && ex.note === note) { res.same++; continue; }
+        out(ym + ' ' + k.kpi_name + ' : ' + (ex ? ex.actual_value : '(없음)') + ' → ' + r.val + ' | ' + r.note);
+        if (dry) continue;
+        await kp('kpi_record?on_conflict=kpi_id,year,month', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({ kpi_id: k.id, year: y, month: m, actual_value: r.val, target_value: monthTarget(k, m), note }) });
+        res.saved++;
+      }
+    }
+    log('저장 ' + res.saved + ' / 변경없음 ' + res.same + ' / 직접입력 유지 ' + res.kept + ' / 건너뜀 ' + res.skipped);
+    return res;
+  }
+
+  G.SFKPI = { SF_URL, loader, computeKpi, deptOf, monthStats, calc, register };
 })(typeof window !== 'undefined' ? window : globalThis);
