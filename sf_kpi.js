@@ -48,6 +48,11 @@
         const next = m === 12 ? (y + 1) + '-01-01' : ymOf(y, m + 1) + '-01';
         return get('iqc_inspections?select=supplier,final_judge,insp_date&insp_date=gte.' + ymOf(y, m) + '-01&insp_date=lt.' + next + '&limit=5000');
       }),
+      // MES 작업지시 월 계획수량 (MES 관리 도구가 작업지시 저장 때 올림)
+      mesPlan: () => once('mp', async () => {
+        const v = await get('kv_store?key=eq.tj_mes_plan_month_v1&select=value');
+        return ((v[0] && v[0].value) || {}).months || {};
+      }),
       prod: () => once('p', async () => {
         const v = await get('kv_store?key=eq.tj_prod_daily_v1&select=value');
         const j = (v[0] && v[0].value) || {};
@@ -162,9 +167,13 @@
     if (!R.length) return { skip: '생산일보에 ' + ym + ' 자료 없음' };
     const T = monthStats(R), src = '생산일보';
     if (/계획/.test(nm) && /달성/.test(nm)) {
-      const PL = Object.assign({}, DEF_PLAN[ym] || {}, ((P.master.plan || {})[ym]) || {});
-      if (!(+PL.tgt)) return { skip: '생산일보에 ' + ym + ' 목표수량(MES) 미입력' };
-      return { val: r1(T.qty / PL.tgt * 100), note: '실적 ' + fmt(T.qty) + ' / 목표 ' + fmt(PL.tgt) + ' EA', src };
+      // 목표수량 우선순위: 생산일보 월 생산계획(직접 입력) → DEF_PLAN → MES 작업지시 월 계획수량 합계
+      const own = ((P.master.plan || {})[ym]) || {}, mp = (await L.mesPlan())[ym] || {};
+      let tgt = +own.tgt, from = '생산일보 월 생산계획';
+      if (!tgt) { tgt = +(DEF_PLAN[ym] || {}).tgt; from = '목표수량'; }
+      if (!tgt) { tgt = +mp.tgt; from = 'MES 작업지시 ' + (mp.n || 0) + '건'; }
+      if (!tgt) return { skip: ym + ' 목표수량 없음 (MES 관리 도구 [월 계획수량 → KPI] 또는 생산일보 월 생산계획 입력)' };
+      return { val: r1(T.qty / tgt * 100), note: '실적 ' + fmt(T.qty) + ' / 목표 ' + fmt(tgt) + ' EA (' + from + ')', src };
     }
     if (/가동률/.test(nm)) return { val: r1(T.oper * 100), note: T.days + '일 평균 (가동시간 ÷ 실근무)', src };
     if (/^효률$/.test(nm) || /생산효률|설비효률/.test(nm)) return { val: r1(T.eff * 100), note: T.days + '일 평균 (실적 ÷ 가능수량)', src };
