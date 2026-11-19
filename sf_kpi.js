@@ -65,6 +65,11 @@
         const next = m === 12 ? (y + 1) + '-01-01' : ymOf(y, m + 1) + '-01';
         return get('daily_downtime?select=ymd,machine_name,stop_events&ymd=gte.' + ymOf(y, m) + '-01&ymd=lt.' + next + '&limit=5000');
       }),
+      // SBC(Raceway) 검사 기록 — 휨 불량률 (검사수량은 품번·일자별 최대값: 같은 날 여러 줄이 같은 검사수량을 가짐)
+      sbc: (y, m) => once('s' + ymOf(y, m), () => {
+        const next = m === 12 ? (y + 1) + '-01-01' : ymOf(y, m + 1) + '-01';
+        return get('defect_history?select=model_name,defect_date,defect_type,qty,inspect_qty&inspect_line=eq.SBC&defect_date=gte.' + ymOf(y, m) + '-01&defect_date=lt.' + next + '&limit=20000');
+      }),
       // 금형 정기점검 계획·이력 — 예방보전 준수
       mold: () => once('m', async () => {
         const v = await get('kv_store?key=eq.mold_periodic_v1&select=plan:value->plan,hist:value->hist');
@@ -87,6 +92,17 @@
   const isPass = j => /^(OK|합격|PASS|적합)$/i.test(String(j || '').trim());
 
   async function quality(k, y, m, L) {
+    // 휨 불량률(Outer|Inner) PPM = SBC 검사 휨 수량 ÷ 검사수량 (2027 핵심 KPI · 개선과제 IMP-2611-01)
+    if (/휨/.test(k.kpi_name || '')) {
+      const ym0 = ymOf(y, m), side = /outer/i.test(k.kpi_name) ? 'outer' : /inner/i.test(k.kpi_name) ? 'inner' : '';
+      const rows = (await L.sbc(y, m)).filter(r => !side || String(r.model_name || '').toLowerCase().includes(side));
+      if (!rows.length) return { skip: 'SBC 검사 기록에 ' + ym0 + ' 자료 없음' };
+      const day = {}; let w = 0;
+      rows.forEach(r => { const key = r.model_name + '|' + r.defect_date; day[key] = Math.max(day[key] || 0, +r.inspect_qty || 0); if (r.defect_type === '휨') w += +r.qty || 0; });
+      const insp = Object.values(day).reduce((a, x) => a + x, 0);
+      if (!insp) return { skip: ym0 + ' 검사수량 없음' };
+      return { val: Math.round(w / insp * 1e6), note: '휨 ' + fmt(w) + ' / 검사 ' + fmt(insp) + ' EA (SBC' + (side ? ' ' + side[0].toUpperCase() + side.slice(1) : '') + ')', src: 'SBC 검사(불량관리)' };
+    }
     const nm = norm(k.kpi_name), qs = await L.quality(), ym = ymOf(y, m);
     const cum = (qs.cumulative || {})[ym];
     const src = '월간보고 ' + (qs.updatedAt || '').slice(0, 10);
@@ -213,7 +229,8 @@
   function monthTarget(k, m) {
     let o = k.monthly_targets;
     if (typeof o === 'string') { try { o = JSON.parse(o); } catch (e) { o = null; } }
-    const v = o && (o[m] != null ? o[m] : o[String(m)]);
+    // 배열이면 [1월..12월] (index.html getMonthTarget 과 같게 m-1), 객체면 {월: 값}
+    const v = Array.isArray(o) ? o[m - 1] : o && (o[m] != null ? o[m] : o[String(m)]);
     return v !== undefined && v !== null && v !== '' ? Number(v) : (k.target_value != null ? k.target_value : null);
   }
   async function register(opt) {
